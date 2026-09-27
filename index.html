@@ -46,7 +46,6 @@
     left: 0;
     right: 0;
     height: 100%;
-    
     font-family: "Arial Rounded MT Bold", "Trebuchet MS", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     background:
       radial-gradient(circle at 15% 10%, rgba(255,212,59,.25) 0 50px, transparent 51px),
@@ -654,728 +653,705 @@
   <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
   <script>
-  // =====================================================
-  // CONFIGURATION API APPS SCRIPT
-  // =====================================================
-  const API_URL = "https://script.google.com/macros/s/AKfycbwSBdQHLeLF_sGy0dVq3gtFPHIm2saKyYb2DMTidzVCXPXIdVoI1LY87mC0U8M6HhKb/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbwSBdQHLeLF_sGy0dVq3gtFPHIm2saKyYb2DMTidzVCXPXIdVoI1LY87mC0U8M6HhKb/exec";
 
-  let devoirs = [];
-  let enfants = [];
-  let matieres = [];
-  let priorites = [];
-  let statuts = [];
-  let types = [];
-  let profils = [];
+    let devoirs = [];
+    let enfants = [];
+    let matieres = [];
+    let priorites = [];
+    let statuts = [];
+    let types = [];
+    let profils = [];
 
-  const catalogueRecompenses = [
-    { id: 1, titre: "30 min de Console / Jeux Vidéo", cout: 100, icone: "🎮", desc: "Du temps de jeu en plus validé par les parents." },
-    { id: 2, titre: "Choisir le film de la soirée en famille", cout: 150, icone: "🍿", desc: "C'est toi qui choisis le film ce soir sur le canapé !" },
-    { id: 3, titre: "1 Glace ou Goûter spécial au choix", cout: 200, icone: "🍨", desc: "Une gourmandise de ton choix pour le goûter." },
-    { id: 4, titre: "Couché repoussé de 30 minutes", cout: 250, icone: "🌙", desc: "Le droit de veiller un peu plus tard un soir de weekend." },
-    { id: 5, titre: "Sortie en tête-à-tête (ciné, jeux, balade)", cout: 400, icone: "🎟️", desc: "Un moment privilégié avec un parent au choix !" }
-  ];
+    const catalogueRecompenses = [
+      { id: 1, titre: "30 min de Console / Jeux Vidéo", cout: 100, icone: "🎮", desc: "Du temps de jeu en plus validé par les parents." },
+      { id: 2, titre: "Choisir le film de la soirée en famille", cout: 150, icone: "🍿", desc: "C'est toi qui choisis le film ce soir sur le canapé !" },
+      { id: 3, titre: "1 Glace ou Goûter spécial au choix", cout: 200, icone: "🍨", desc: "Une gourmandise de ton choix pour le goûter." },
+      { id: 4, titre: "Couché repoussé de 30 minutes", cout: 250, icone: "🌙", desc: "Le droit de veiller un peu plus tard un soir de weekend." },
+      { id: 5, titre: "Sortie en tête-à-tête (ciné, jeux, balade)", cout: 400, icone: "🎟️", desc: "Un moment privilégié avec un parent au choix !" }
+    ];
 
-  let vueActuelle = 'aujourdhui';
-  let enfantSelectionne = 'TOUS';
+    let vueActuelle = 'aujourdhui';
+    let enfantSelectionne = 'TOUS';
 
-  function callAPI(action, payload) {
-    const dataToSend = Object.assign({ action: action }, payload || {});
-    return fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(dataToSend)
-    })
-    .then(res => {
-      if (!res.ok) throw new Error("Erreur réseau HTTP " + res.status);
-      return res.json();
-    });
-  }
-
-  // =====================================================
-  // INITIALISATION
-  // =====================================================
-  document.addEventListener("DOMContentLoaded", function() {
-    afficherDateCourante();
-    chargerDonneesDeReference();
-  });
-
-  function afficherDateCourante() {
-    const options = { weekday: 'long', day: 'numeric', month: 'long' };
-    const date = new Date().toLocaleDateString('fr-FR', options);
-    document.getElementById('dateCourante').innerText =
-      date.charAt(0).toUpperCase() + date.slice(1);
-  }
-
-  function rafraichirDonnees() {
-    const btn = document.querySelector('.header-refresh');
-    if (btn) btn.classList.add('spinning');
-
-    callAPI('getDevoirsFamille')
-      .then(response => {
-        if (btn) btn.classList.remove('spinning');
-        if (!response || !response.success) {
-          return afficherErreur(response ? response.error.message : 'Erreur de chargement');
-        }
-        afficherToast('Données actualisées');
-        devoirs = response.data || [];
-        routerAffichage();
+    function callAPI(action, payload) {
+      const dataToSend = Object.assign({ action: action }, payload || {});
+      return fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(dataToSend)
       })
-      .catch(err => {
-        if (btn) btn.classList.remove('spinning');
-        afficherErreur(err);
-      });
-  }
-
-  function chargerDonneesDeReference() {
-    callAPI('getInitialData')
-      .then(response => {
-        if (!response || !response.success) return afficherErreur(response ? response.error.message : 'Erreur API');
-        
-        enfants = response.data.enfants || [];
-        matieres = response.data.matieres || [];
-        statuts = response.data.statuts || [];
-        priorites = response.data.priorites || [];
-        types = response.data.types || [];
-        profils = response.data.profils || [];
-
-        genererFiltreEnfants();
-        remplirListesDeroulantes();
-        
-        chargerDevoirs();
-      })
-      .catch(afficherErreur);
-  }
-
-  function chargerDevoirs() {
-    callAPI('getDevoirsFamille')
-      .then(response => {
-        if (!response || !response.success) return afficherErreur(response ? response.error.message : 'Erreur Devoirs');
-        
-        devoirs = response.data || [];
-        routerAffichage();
-      })
-      .catch(afficherErreur);
-  }
-
-  // =====================================================
-  // GESTION DE L'INTERFACE ET DES VUES
-  // =====================================================
-  function genererFiltreEnfants() {
-    const container = document.getElementById('listeEnfants');
-    let html = `<button class="enfant-btn active" type="button" onclick="filtrerEnfant('TOUS', this)">Tous</button>`;
-    
-    enfants.forEach(e => {
-      let nom = e.Prenom || e.Nom || e.ID_Enfant;
-      html += `<button class="enfant-btn" type="button" onclick="filtrerEnfant('${e.ID_Enfant}', this)" aria-pressed="false">${echapperHTML(nom)}</button>`;
-    });
-    
-    container.innerHTML = html;
-  }
-
-  function filtrerEnfant(id, btnElement) {
-    enfantSelectionne = id;
-    document.querySelectorAll('.enfant-btn').forEach(btn => {
-      btn.classList.remove('active');
-      btn.setAttribute('aria-pressed', 'false');
-    });
-    btnElement.classList.add('active');
-    btnElement.setAttribute('aria-pressed', 'true');
-    routerAffichage();
-  }
-
-  function changerVue(vue) {
-    vueActuelle = vue;
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    
-    if (vue === 'aujourdhui') document.getElementById('tabAujourdHui').classList.add('active');
-    if (vue === 'tous') document.getElementById('tabTous').classList.add('active');
-    if (vue === 'semaine') document.getElementById('tabSemaine').classList.add('active');
-    if (vue === 'boutique') document.getElementById('tabBoutique').classList.add('active');
-    
-    routerAffichage();
-  }
-
-  function routerAffichage() {
-    if (vueActuelle === 'boutique') {
-      document.getElementById('chargeContainer').innerHTML = '';
-      afficherBoutique();
-    } else {
-      afficherDevoirs();
-    }
-  }
-
-  // =====================================================
-  // BOUTIQUE DE RÉCOMPENSES XP (AVEC ÉPARGNE)
-  // =====================================================
-  function afficherBoutique() {
-    const container = document.getElementById('contenu');
-
-    if (enfantSelectionne === 'TOUS') {
-      container.innerHTML = `
-        <div style="text-align:center; padding:50px 20px;">
-          <div style="font-size: 48px; margin-bottom: 15px;">🎁</div>
-          <h2 style="color: #ffd700; margin-bottom: 10px; font-weight: 900;">Boutique XP</h2>
-          <p style="color: var(--muted); font-weight: 800; font-size: 15px; line-height: 1.4;">
-            Choisis ton prénom en haut pour voir ton épargne XP et débloquer tes récompenses ! 🚀
-          </p>
-        </div>
-      `;
-      return;
-    }
-
-    let p = profils.find(x => String(x.ID_Enfant) === String(enfantSelectionne)) || {
-      XP_Totale: 0,
-      XP_Disponibles: 0,
-      Badges: 0,
-      Niveau_Actuel: 1,
-      Titre_Actuel: "Débutant"
-    };
-
-    let xpTotale = p.XP_Totale !== undefined ? p.XP_Totale : (p.XP_Total || 0);
-    let xpDispo = p.XP_Disponibles !== undefined ? p.XP_Disponibles : (p.XP_Dispo !== undefined ? p.XP_Dispo : xpTotale);
-    let nbBadges = p.Badges || 0;
-
-    let prochainObjectif = catalogueRecompenses.find(item => item.cout > xpDispo) || catalogueRecompenses[catalogueRecompenses.length - 1];
-    let pourcentageObj = Math.min(100, Math.round((xpDispo / prochainObjectif.cout) * 100));
-    let resteXP = Math.max(0, prochainObjectif.cout - xpDispo);
-
-    let headerBoutique = `
-      <div class="profil-card" style="margin-bottom: 20px;">
-        <div class="profil-header" style="margin-bottom: 8px;">
-          <div>
-            <span class="brawl-level-badge">BOUTIQUE & ÉPARGNE</span>
-            <div class="profil-titre-niveau" style="margin-top: 4px;">🎯 Ton Épargne XP</div>
-          </div>
-          <div style="text-align: right;">
-            <div style="font-size: 12px; color: #ffd700; font-weight: 900;">⭐ Total : ${xpTotale} XP</div>
-            <div style="font-size: 11px; color: #cbd5e1; font-weight: 800;">🏆 ${nbBadges} Badge(s)</div>
-          </div>
-        </div>
-
-        <div style="background: rgba(0,0,0,0.45); border: 3px solid #324796; border-radius: 14px; padding: 12px; margin-top: 10px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-            <span style="font-size: 14px; font-weight: 900; color: #ffd700;">💰 ${xpDispo} XP disponibles</span>
-            <span style="font-size: 11px; font-weight: 800; color: #94a3b8;">${pourcentageObj}%</span>
-          </div>
-          <div style="font-size: 12px; color: #fff; font-weight: 800; margin-bottom: 8px;">
-            Objectif : ${prochainObjectif.icone} ${prochainObjectif.titre} (${prochainObjectif.cout} XP)
-          </div>
-          <div class="progress" style="margin-top: 0; margin-bottom: 6px;">
-            <div class="progress-bar" style="width: ${pourcentageObj}%;"></div>
-          </div>
-          <div style="font-size: 11px; color: #cbd5e1; font-weight: 800; text-align: right;">
-            ${resteXP > 0 ? `Encore ${resteXP} XP pour l'atteindre !` : 'Objectif atteint ! Tu peux l\'acheter ! 🎉'}
-          </div>
-        </div>
-      </div>
-    `;
-
-    let itemsHTML = catalogueRecompenses.map(item => {
-      const peutAcheter = xpDispo >= item.cout;
-      return `
-        <div class="shop-card">
-          <div class="shop-item-top">
-            <div class="shop-icon">${item.icone}</div>
-            <div class="shop-info">
-              <div class="shop-title">${echapperHTML(item.titre)}</div>
-              <div class="shop-desc">${echapperHTML(item.desc)}</div>
-            </div>
-          </div>
-          <div class="shop-footer">
-            <div class="shop-price">⭐ ${item.cout} XP</div>
-            <button class="btn-buy" ${peutAcheter ? '' : 'disabled'} onclick="acheterRecompense(${item.cout}, '${echapperHTML(item.titre)}')">
-              ${peutAcheter ? 'ÉCHANGER' : 'XP insuffisants'}
-            </button>
-          </div>
-        </div>
-      `;
-    }).join('');
-
-    container.innerHTML = headerBoutique + itemsHTML;
-  }
-
-  function acheterRecompense(cout, titreRecompense) {
-    let p = profils.find(x => String(x.ID_Enfant) === String(enfantSelectionne));
-    if (!p) return;
-
-    let xpDispo = p.XP_Disponibles !== undefined ? p.XP_Disponibles : (p.XP_Dispo !== undefined ? p.XP_Dispo : (p.XP_Totale || p.XP_Total || 0));
-
-    if (xpDispo < cout) {
-      afficherToast("⚠️ Tu n'as pas assez d'XP disponibles !");
-      return;
-    }
-
-    if (confirm(`Veux-tu vraiment échanger ${cout} XP de ton épargne contre : "${titreRecompense}" ?`)) {
-      if (p.XP_Disponibles !== undefined) {
-        p.XP_Disponibles -= cout;
-      } else if (p.XP_Dispo !== undefined) {
-        p.XP_Dispo -= cout;
-      } else {
-        p.XP_Disponibles = xpDispo - cout;
-      }
-
-      afficherToast(`🎉 Récompense débloquée : "${titreRecompense}" ! Bon courage aux parents pour la valider ! 🏆`);
-      afficherBoutique();
-    }
-  }
-
-  // =====================================================
-  // AFFICHAGE PRINCIPAL DES DEVOIRS ET DE LA CHARGE
-  // =====================================================
-  function getNomEnfant(id) {
-    const e = enfants.find(x => x.ID_Enfant === id);
-    return e ? (e.Prenom || e.Nom || id) : id;
-  }
-
-  function getNomMatiere(id) {
-    const m = matieres.find(x => x.ID_Matiere === id || x.Code === id);
-    return m ? (m.Matiere || m.Code || id) : id;
-  }
-
-  function afficherDevoirs() {
-    const container = document.getElementById('contenu');
-    container.innerHTML = '';
-    
-    let devoirsFiltres = devoirs.filter(d => enfantSelectionne === 'TOUS' || d.ID_Enfant === enfantSelectionne);
-    
-    const aujourdhui = new Date();
-    aujourdhui.setHours(0, 0, 0, 0);
-
-    const estFaitOuAnnule = (d) => d.Statut === 'FAIT' || d.Statut === 'ANNULE' || d.Statut === 'TERMINE';
-    let idCibleAAncre = null;
-    
-    if (vueActuelle === 'aujourdhui') {
-      devoirsFiltres = devoirsFiltres.filter(d => {
-        if (!d.Date_Echeance) return false;
-        let dateD = new Date(d.Date_Echeance);
-        dateD.setHours(0, 0, 0, 0);
-        return !estFaitOuAnnule(d) && dateD.getTime() <= aujourdhui.getTime();
-      });
-    } else if (vueActuelle === 'semaine') { 
-      devoirsFiltres = devoirsFiltres.filter(d => {
-        if (!d.Date_Echeance) return false;
-        let dateD = new Date(d.Date_Echeance);
-        dateD.setHours(0, 0, 0, 0);
-        return !estFaitOuAnnule(d) && dateD.getTime() >= aujourdhui.getTime();
+      .then(res => {
+        if (!res.ok) throw new Error("Erreur réseau HTTP " + res.status);
+        return res.json();
       });
     }
 
-    devoirsFiltres.sort((a, b) => {
-      let dateA = a.Date_Echeance ? new Date(a.Date_Echeance).getTime() : 0;
-      let dateB = b.Date_Echeance ? new Date(b.Date_Echeance).getTime() : 0;
-      return dateA - dateB;
+    document.addEventListener("DOMContentLoaded", function() {
+      afficherDateCourante();
+      chargerDonneesDeReference();
     });
 
-    calculerCharge(devoirsFiltres);
-
-    if (devoirsFiltres.length === 0) {
-      container.innerHTML += '<div style="text-align:center; padding:30px 20px; color:var(--muted); font-weight:800;">Aucun devoir pour cette sélection. Bien joué ! 🎉</div>';
-      return;
-    }
-    
-    let html = '';
-    let currentGroup = '';
-
-    devoirsFiltres.forEach(d => {
-      let dateObj = d.Date_Echeance ? new Date(d.Date_Echeance) : null;
-      let dateStr = dateObj ? dateObj.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }) : 'Sans date';
-      
-      if (dateStr !== currentGroup) {
-        html += `<div class="jour-header"><div class="jour-title">${dateStr.charAt(0).toUpperCase() + dateStr.slice(1)}</div></div>`;
-        currentGroup = dateStr;
-      }
-
-      const estFait = estFaitOuAnnule(d);
-      const nomMatiere = getNomMatiere(d.ID_Matiere);
-      const nomEnfant = getNomEnfant(d.ID_Enfant);
-      
-      let badgeEnfantHTML = enfantSelectionne === 'TOUS' ? `<span class="badge badge-enfant">👤 ${echapperHTML(nomEnfant)}</span>` : '';
-      let badgePriorite = (d.Priorite === 'HAUTE' || d.Priorite === 'URGENTE') ? `<span class="badge badge-haute">🔥 ${d.Priorite}</span>` : '';
-      let badgeEtapes = (d.Etape && d.Nb_Etapes) ? `<span class="badge">Étape ${d.Etape}/${d.Nb_Etapes}</span>` : '';
-
-      const dateKey = d.Date_Echeance ? d.Date_Echeance : '';
-      const aujourdhuiKey = new Date().toISOString().split('T')[0];
-      const estEnRetard = !estFait && dateKey && dateKey < aujourdhuiKey;
-
-      if (vueActuelle === 'tous' && !idCibleAAncre && !estFait && dateObj) {
-        let dateD = new Date(dateObj);
-        dateD.setHours(0, 0, 0, 0);
-        if (dateD.getTime() >= aujourdhui.getTime()) {
-          idCibleAAncre = 'devoir-' + d.ID_Devoir;
-        }
-      }
-
-      html += `
-        <article id="devoir-${d.ID_Devoir}" class="devoir ${estFait ? 'fait' : ''} ${estEnRetard ? 'en-retard' : ''}">
-          <div class="devoir-top">
-            <button
-              class="devoir-check"
-              type="button"
-              onclick="cocherDevoir('${d.ID_Devoir}', '${d.Statut}')"
-              aria-label="${estFait ? 'Marquer comme à faire' : 'Marquer comme fait'}">
-              ${estFait ? '✓' : ''}
-            </button>
-
-            <div class="devoir-main">
-              <div class="devoir-title-row">
-                <div class="devoir-titre">${echapperHTML(d.Titre)}</div>
-                <button class="devoir-menu" type="button" onclick="toggleMenuDevoir(this)" aria-label="Actions du devoir" aria-expanded="false">•••</button>
-              </div>
-
-              <div class="devoir-meta">
-                ${badgeEnfantHTML}
-                <span>📚 ${echapperHTML(nomMatiere)}</span>
-                <span>⏱ ${d.Duree_Estimee_Min || 0} min</span>
-                ${badgePriorite} ${badgeEtapes}
-              </div>
-
-              ${estEnRetard ? `<div class="retard-label">En retard</div>` : ''}
-              ${d.Description ? `<div class="devoir-description">${echapperHTML(d.Description)}</div>` : ''}
-            </div>
-          </div>
-
-          <div class="devoir-actions hidden">
-            <button class="icon-btn" type="button" onclick="editerDevoir('${d.ID_Devoir}')">Modifier</button>
-            <button class="icon-btn danger" type="button" onclick="supprimerDevoirUI('${d.ID_Devoir}')">Supprimer</button>
-          </div>
-        </article>
-      `;
-    });
-
-    container.innerHTML += html;
-
-    if (vueActuelle === 'tous') {
-      setTimeout(() => {
-        if (idCibleAAncre) {
-          const el = document.getElementById(idCibleAAncre);
-          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      }, 150);
-    }
-  }
-
-  function calculerCharge(devoirsFiltres) {
-    const container = document.getElementById('chargeContainer');
-    if (!container) return;
-
-    const totalMin = devoirsFiltres.reduce((sum, d) => sum + Number(d.Duree_Estimee_Min || 0), 0);
-    const faitsMin = devoirsFiltres
-      .filter(d => d.Statut === 'FAIT' || d.Statut === 'ANNULE' || d.Statut === 'TERMINE')
-      .reduce((sum, d) => sum + Number(d.Duree_Estimee_Min || 0), 0);
-
-    const nbDevoirsTotal = devoirsFiltres.length;
-    const nbDevoirsFaits = devoirsFiltres.filter(d => d.Statut === 'FAIT' || d.Statut === 'ANNULE' || d.Statut === 'TERMINE').length;
-
-    if (nbDevoirsTotal === 0 && enfantSelectionne === 'TOUS') {
-      container.innerHTML = '';
-      return;
+    function afficherDateCourante() {
+      const options = { weekday: 'long', day: 'numeric', month: 'long' };
+      const date = new Date().toLocaleDateString('fr-FR', options);
+      document.getElementById('dateCourante').innerText =
+        date.charAt(0).toUpperCase() + date.slice(1);
     }
 
-    const pourcentage = totalMin > 0 ? Math.round((faitsMin / totalMin) * 100) : 0;
+    function rafraichirDonnees() {
+      const btn = document.querySelector('.header-refresh');
+      if (btn) btn.classList.add('spinning');
 
-    let labelVue = "Aujourd'hui";
-    if (vueActuelle === 'semaine') labelVue = "À venir";
-    if (vueActuelle === 'tous') labelVue = "Tous";
-
-    container.innerHTML = `
-      <div class="charge-card">
-        <div>
-          <div class="charge-number">${faitsMin} / ${totalMin} min</div>
-        </div>
-        <div class="charge-detail">
-          ${nbDevoirsFaits} sur ${nbDevoirsTotal} devoir(s) terminé(s) (${labelVue})
-        </div>
-        <div class="progress">
-          <div class="progress-bar" style="width: ${pourcentage}%;"></div>
-        </div>
-      </div>
-    `;
-  }
-
-  function toggleMenuDevoir(button) {
-    const card = button.closest('.devoir');
-    if (!card) return;
-
-    const menu = card.querySelector('.devoir-actions');
-    if (!menu) return;
-
-    const ouvert = !menu.classList.contains('hidden');
-
-    document.querySelectorAll('.devoir-actions').forEach(el => el.classList.add('hidden'));
-    document.querySelectorAll('.devoir-menu').forEach(el => el.setAttribute('aria-expanded', 'false'));
-
-    if (!ouvert) {
-      menu.classList.remove('hidden');
-      button.setAttribute('aria-expanded', 'true');
-    }
-  }
-
-  // =====================================================
-  // ACTIONS DEVOIRS (COCHAGE AVEC GAMIFICATION)
-  // =====================================================
-  function cocherDevoir(idDevoir, statutActuel) {
-    const estDejaFait = (statutActuel === 'FAIT' || statutActuel === 'TERMINE' || statutActuel === 'ANNULE');
-    const nouveauStatut = estDejaFait ? 'A_FAIRE' : 'FAIT';
-    
-    callAPI('changerStatut', { idDevoir: idDevoir, nouveauStatut: nouveauStatut })
-      .then(response => {
-        if (!response || !response.success) {
-          afficherErreur(response ? response.error.message : 'Erreur statut');
-          rafraichirDonnees();
-        } else {
-          if (response.data && response.data.gamification) {
-            const gami = response.data.gamification;
-
-            let profilLocal = profils.find(x => String(x.ID_Enfant) === String(enfantSelectionne));
-            if (profilLocal) {
-              profilLocal.XP_Totale = gami.nouveauXPTotal;
-              if (profilLocal.XP_Disponibles !== undefined) {
-                profilLocal.XP_Disponibles += gami.xpGagnes;
-              } else {
-                profilLocal.XP_Disponibles = (profilLocal.XP_Disponibles || gami.nouveauXPTotal);
-              }
-              profilLocal.Niveau_Actuel = gami.niveau;
-              profilLocal.Titre_Actuel = gami.titre;
-            }
-
-            let messageToast = nouveauStatut === 'FAIT' 
-              ? `🎉 Validé ! +${gami.xpGagnes} XP` 
-              : 'Devoir remis à faire';
-
-            if (gami.raisonsXP && gami.raisonsXP.length > 0) {
-              messageToast += ` (${gami.raisonsXP.join(', ')})`;
-            }
-
-            if (gami.levelUp) {
-              alert(`⭐ NIVEAU SUPÉRIEUR ! ⭐\n\nBravo ! Passage au niveau ${gami.niveau} : "${gami.titre}" ! 🚀`);
-            }
-
-            afficherToast(messageToast);
-          } else {
-            afficherToast(nouveauStatut === 'FAIT' ? 'Devoir validé ! 🎉' : 'Devoir remis à faire');
+      callAPI('getDevoirsFamille')
+        .then(response => {
+          if (btn) btn.classList.remove('spinning');
+          if (!response || !response.success) {
+            return afficherErreur(response ? response.error.message : 'Erreur de chargement');
           }
-          rafraichirDonnees();
-        }
-      })
-      .catch(err => {
-        afficherErreur(err);
-        rafraichirDonnees();
-      });
-  }
+          afficherToast('Données actualisées');
+          devoirs = response.data || [];
+          routerAffichage();
+        })
+        .catch(err => {
+          if (btn) btn.classList.remove('spinning');
+          afficherErreur(err);
+        });
+    }
 
-  function ouvrirFormulaire(idDevoir) {
-    const modal = document.getElementById('modalDevoir');
-    const form = document.getElementById('formDevoir');
-    const titreModal = document.getElementById('modalTitre');
-    const errDiv = document.getElementById('formErreur');
+    function chargerDonneesDeReference() {
+      callAPI('getInitialData')
+        .then(response => {
+          if (!response || !response.success) return afficherErreur(response ? response.error.message : 'Erreur API');
+          
+          enfants = response.data.enfants || [];
+          matieres = response.data.matieres || [];
+          statuts = response.data.statuts || [];
+          priorites = response.data.priorites || [];
+          types = response.data.types || [];
+          profils = response.data.profils || [];
 
-    errDiv.classList.add('hidden');
-    errDiv.innerText = '';
-    form.reset();
+          genererFiltreEnfants();
+          remplirListesDeroulantes();
+          chargerDevoirs();
+        })
+        .catch(afficherErreur);
+    }
 
-    document.getElementById('advancedFields').classList.add('hidden');
-    document.getElementById('advancedToggle').setAttribute('aria-expanded', 'false');
+    function chargerDevoirs() {
+      callAPI('getDevoirsFamille')
+        .then(response => {
+          if (!response || !response.success) return afficherErreur(response ? response.error.message : 'Erreur Devoirs');
+          devoirs = response.data || [];
+          routerAffichage();
+        })
+        .catch(afficherErreur);
+    }
 
-    if (idDevoir) {
-      const d = devoirs.find(x => String(x.ID_Devoir) === String(idDevoir));
-      if (d) {
-        titreModal.innerText = 'Modifier le devoir';
-        document.getElementById('formIdDevoir').value = d.ID_Devoir;
-        document.getElementById('formEnfant').value = d.ID_Enfant || '';
-        document.getElementById('formMatiere').value = d.ID_Matiere || '';
-        document.getElementById('formTitre').value = d.Titre || '';
-        
-        let dateVal = '';
-        if (d.Date_Echeance) {
-          const dt = new Date(d.Date_Echeance);
-          dateVal = !isNaN(dt.getTime()) ? dt.toISOString().split('T')[0] : d.Date_Echeance;
-        }
-        document.getElementById('formDate').value = dateVal;
-        document.getElementById('formDuree').value = d.Duree_Estimee_Min || 20;
-
-        document.getElementById('formDescription').value = d.Description || '';
-        document.getElementById('formType').value = d.Type || 'DEVOIR';
-        document.getElementById('formPriorite').value = d.Priorite || 'NORMALE';
-        document.getElementById('formEtape').value = d.Etape || '';
-        document.getElementById('formNbEtapes').value = d.Nb_Etapes || '';
-        document.getElementById('formStatut').value = d.Statut || 'A_FAIRE';
-
-        if (d.Description || d.Etape || d.Nb_Etapes || d.Priorite === 'HAUTE' || d.Priorite === 'URGENTE') {
-          document.getElementById('advancedFields').classList.remove('hidden');
-          document.getElementById('advancedToggle').setAttribute('aria-expanded', 'true');
-        }
-      }
-    } else {
-      titreModal.innerText = 'Ajouter un devoir';
-      document.getElementById('formIdDevoir').value = '';
+    function genererFiltreEnfants() {
+      const container = document.getElementById('listeEnfants');
+      let html = `<button class="enfant-btn active" type="button" onclick="filtrerEnfant('TOUS', this)">Tous</button>`;
       
-      const today = new Date().toISOString().split('T')[0];
-      document.getElementById('formDate').value = today;
+      enfants.forEach(e => {
+        let nom = e.Prenom || e.Nom || e.ID_Enfant;
+        html += `<button class="enfant-btn" type="button" onclick="filtrerEnfant('${e.ID_Enfant}', this)" aria-pressed="false">${echapperHTML(nom)}</button>`;
+      });
+      
+      container.innerHTML = html;
+    }
 
-      if (enfantSelectionne !== 'TOUS') {
-        document.getElementById('formEnfant').value = enfantSelectionne;
+    function filtrerEnfant(id, btnElement) {
+      enfantSelectionne = id;
+      document.querySelectorAll('.enfant-btn').forEach(btn => {
+        btn.classList.remove('active');
+        btn.setAttribute('aria-pressed', 'false');
+      });
+      btnElement.classList.add('active');
+      btnElement.setAttribute('aria-pressed', 'true');
+      routerAffichage();
+    }
+
+    function changerVue(vue) {
+      vueActuelle = vue;
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      
+      if (vue === 'aujourdhui') document.getElementById('tabAujourdHui').classList.add('active');
+      if (vue === 'tous') document.getElementById('tabTous').classList.add('active');
+      if (vue === 'semaine') document.getElementById('tabSemaine').classList.add('active');
+      if (vue === 'boutique') document.getElementById('tabBoutique').classList.add('active');
+      
+      routerAffichage();
+    }
+
+    function routerAffichage() {
+      if (vueActuelle === 'boutique') {
+        document.getElementById('chargeContainer').innerHTML = '';
+        afficherBoutique();
+      } else {
+        afficherDevoirs();
       }
     }
 
-    modal.classList.remove('hidden');
-    document.body.classList.add('modal-open');
-  }
+    function afficherBoutique() {
+      const container = document.getElementById('contenu');
 
-  function editerDevoir(idDevoir) {
-    ouvrirFormulaire(idDevoir);
-  }
+      if (enfantSelectionne === 'TOUS') {
+        container.innerHTML = `
+          <div style="text-align:center; padding:50px 20px;">
+            <div style="font-size: 48px; margin-bottom: 15px;">🎁</div>
+            <h2 style="color: #ffd700; margin-bottom: 10px; font-weight: 900;">Boutique XP</h2>
+            <p style="color: var(--muted); font-weight: 800; font-size: 15px; line-height: 1.4;">
+              Choisis ton prénom en haut pour voir ton épargne XP et débloquer tes récompenses ! 🚀
+            </p>
+          </div>
+        `;
+        return;
+      }
 
-  function fermerFormulaire() {
-    const modal = document.getElementById('modalDevoir');
-    modal.classList.add('hidden');
-    document.body.classList.remove('modal-open');
-  }
+      let p = profils.find(x => String(x.ID_Enfant) === String(enfantSelectionne)) || {
+        XP_Totale: 0,
+        XP_Disponibles: 0,
+        Badges: 0,
+        Niveau_Actuel: 1,
+        Titre_Actuel: "Débutant"
+      };
 
-  function toggleOptionsAvancees() {
-    const fields = document.getElementById('advancedFields');
-    const toggleBtn = document.getElementById('advancedToggle');
-    const cache = fields.classList.contains('hidden');
+      let xpTotale = p.XP_Totale !== undefined ? p.XP_Totale : (p.XP_Total || 0);
+      let xpDispo = p.XP_Disponibles !== undefined ? p.XP_Disponibles : (p.XP_Dispo !== undefined ? p.XP_Dispo : xpTotale);
+      let nbBadges = p.Badges || 0;
 
-    if (cache) {
-      fields.classList.remove('hidden');
-      toggleBtn.setAttribute('aria-expanded', 'true');
-    } else {
-      fields.classList.add('hidden');
-      toggleBtn.setAttribute('aria-expanded', 'false');
+      let prochainObjectif = catalogueRecompenses.find(item => item.cout > xpDispo) || catalogueRecompenses[catalogueRecompenses.length - 1];
+      let pourcentageObj = Math.min(100, Math.round((xpDispo / prochainObjectif.cout) * 100));
+      let resteXP = Math.max(0, prochainObjectif.cout - xpDispo);
+
+      let headerBoutique = `
+        <div class="profil-card" style="margin-bottom: 20px;">
+          <div class="profil-header" style="margin-bottom: 8px;">
+            <div>
+              <span class="brawl-level-badge">BOUTIQUE & ÉPARGNE</span>
+              <div class="profil-titre-niveau" style="margin-top: 4px;">🎯 Ton Épargne XP</div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 12px; color: #ffd700; font-weight: 900;">⭐ Total : ${xpTotale} XP</div>
+              <div style="font-size: 11px; color: #cbd5e1; font-weight: 800;">🏆 ${nbBadges} Badge(s)</div>
+            </div>
+          </div>
+
+          <div style="background: rgba(0,0,0,0.45); border: 3px solid #324796; border-radius: 14px; padding: 12px; margin-top: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <span style="font-size: 14px; font-weight: 900; color: #ffd700;">💰 ${xpDispo} XP disponibles</span>
+              <span style="font-size: 11px; font-weight: 800; color: #94a3b8;">${pourcentageObj}%</span>
+            </div>
+            <div style="font-size: 12px; color: #fff; font-weight: 800; margin-bottom: 8px;">
+              Objectif : ${prochainObjectif.icone} ${prochainObjectif.titre} (${prochainObjectif.cout} XP)
+            </div>
+            <div class="progress" style="margin-top: 0; margin-bottom: 6px;">
+              <div class="progress-bar" style="width: ${pourcentageObj}%;"></div>
+            </div>
+            <div style="font-size: 11px; color: #cbd5e1; font-weight: 800; text-align: right;">
+              ${resteXP > 0 ? `Encore ${resteXP} XP pour l'atteindre !` : 'Objectif atteint ! Tu peux l\'acheter ! 🎉'}
+            </div>
+          </div>
+        </div>
+      `;
+
+      let itemsHTML = catalogueRecompenses.map(item => {
+        const peutAcheter = xpDispo >= item.cout;
+        return `
+          <div class="shop-card">
+            <div class="shop-item-top">
+              <div class="shop-icon">${item.icone}</div>
+              <div class="shop-info">
+                <div class="shop-title">${echapperHTML(item.titre)}</div>
+                <div class="shop-desc">${echapperHTML(item.desc)}</div>
+              </div>
+            </div>
+            <div class="shop-footer">
+              <div class="shop-price">⭐ ${item.cout} XP</div>
+              <button class="btn-buy" ${peutAcheter ? '' : 'disabled'} onclick="acheterRecompense(${item.cout}, '${echapperHTML(item.titre)}')">
+                ${peutAcheter ? 'ÉCHANGER' : 'XP insuffisants'}
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      container.innerHTML = headerBoutique + itemsHTML;
     }
-  }
 
-  function sauvegarderDevoir(event) {
-    event.preventDefault();
-    const btnSave = document.getElementById('btnSauvegarder');
-    const errDiv = document.getElementById('formErreur');
+    function acheterRecompense(cout, titreRecompense) {
+      let p = profils.find(x => String(x.ID_Enfant) === String(enfantSelectionne));
+      if (!p) return;
 
-    errDiv.classList.add('hidden');
-    errDiv.innerText = '';
+      let xpDispo = p.XP_Disponibles !== undefined ? p.XP_Disponibles : (p.XP_Dispo !== undefined ? p.XP_Dispo : (p.XP_Totale || p.XP_Total || 0));
 
-    const idDevoir = document.getElementById('formIdDevoir').value;
-    const payload = {
-      idEnfant: document.getElementById('formEnfant').value,
-      idMatiere: document.getElementById('formMatiere').value,
-      titre: document.getElementById('formTitre').value.trim(),
-      dateEcheance: document.getElementById('formDate').value,
-      dureeEstimeeMin: Number(document.getElementById('formDuree').value || 0),
-      description: document.getElementById('formDescription').value.trim(),
-      type: document.getElementById('formType').value || 'DEVOIR',
-      priorite: document.getElementById('formPriorite').value || 'NORMALE',
-      etape: document.getElementById('formEtape').value || '',
-      nbEtapes: document.getElementById('formNbEtapes').value || '',
-      statut: document.getElementById('formStatut').value || 'A_FAIRE'
-    };
+      if (xpDispo < cout) {
+        afficherToast("⚠️ Tu n'as pas assez d'XP disponibles !");
+        return;
+      }
 
-    if (!payload.idEnfant || !payload.idMatiere || !payload.titre || !payload.dateEcheance) {
-      errDiv.innerText = 'Veuillez remplir tous les champs obligatoires.';
-      errDiv.classList.remove('hidden');
-      return;
-    }
-
-    btnSave.disabled = true;
-    btnSave.innerText = 'Enregistrement…';
-
-    const action = idDevoir ? 'modifierDevoir' : 'ajouterDevoir';
-    const apiPayload = idDevoir ? { idDevoir: idDevoir, data: payload } : { data: payload };
-
-    callAPI(action, apiPayload)
-      .then(response => {
-        btnSave.disabled = false;
-        btnSave.innerText = 'Enregistrer';
-
-        if (!response || !response.success) {
-          const msg = response && response.error ? response.error.message : 'Erreur lors de l’enregistrement';
-          errDiv.innerText = msg;
-          errDiv.classList.remove('hidden');
+      if (confirm(`Veux-tu vraiment échanger ${cout} XP de ton épargne contre : "${titreRecompense}" ?`)) {
+        if (p.XP_Disponibles !== undefined) {
+          p.XP_Disponibles -= cout;
+        } else if (p.XP_Dispo !== undefined) {
+          p.XP_Dispo -= cout;
         } else {
-          fermerFormulaire();
-          afficherToast(idDevoir ? 'Devoir modifié avec succès !' : 'Devoir ajouté avec succès !');
-          rafraichirDonnees();
+          p.XP_Disponibles = xpDispo - cout;
         }
-      })
-      .catch(err => {
-        btnSave.disabled = false;
-        btnSave.innerText = 'Enregistrer';
-        errDiv.innerText = String(err);
-        errDiv.classList.remove('hidden');
+
+        afficherToast(`🎉 Récompense débloquée : "${titreRecompense}" ! Bon courage aux parents pour la valider ! 🏆`);
+        afficherBoutique();
+      }
+    }
+
+    function getNomEnfant(id) {
+      const e = enfants.find(x => x.ID_Enfant === id);
+      return e ? (e.Prenom || e.Nom || id) : id;
+    }
+
+    function getNomMatiere(id) {
+      const m = matieres.find(x => x.ID_Matiere === id || x.Code === id);
+      return m ? (m.Matiere || m.Code || id) : id;
+    }
+
+    function afficherDevoirs() {
+      const container = document.getElementById('contenu');
+      container.innerHTML = '';
+      
+      let devoirsFiltres = devoirs.filter(d => enfantSelectionne === 'TOUS' || d.ID_Enfant === enfantSelectionne);
+      
+      const aujourdhui = new Date();
+      aujourdhui.setHours(0, 0, 0, 0);
+
+      const estFaitOuAnnule = (d) => d.Statut === 'FAIT' || d.Statut === 'ANNULE' || d.Statut === 'TERMINE';
+      let idCibleAAncre = null;
+      
+      if (vueActuelle === 'aujourdhui') {
+        devoirsFiltres = devoirsFiltres.filter(d => {
+          if (!d.Date_Echeance) return false;
+          let dateD = new Date(d.Date_Echeance);
+          dateD.setHours(0, 0, 0, 0);
+          return !estFaitOuAnnule(d) && dateD.getTime() <= aujourdhui.getTime();
+        });
+      } else if (vueActuelle === 'semaine') { 
+        devoirsFiltres = devoirsFiltres.filter(d => {
+          if (!d.Date_Echeance) return false;
+          let dateD = new Date(d.Date_Echeance);
+          dateD.setHours(0, 0, 0, 0);
+          return !estFaitOuAnnule(d) && dateD.getTime() >= aujourdhui.getTime();
+        });
+      }
+
+      devoirsFiltres.sort((a, b) => {
+        let dateA = a.Date_Echeance ? new Date(a.Date_Echeance).getTime() : 0;
+        let dateB = b.Date_Echeance ? new Date(b.Date_Echeance).getTime() : 0;
+        return dateA - dateB;
       });
-  }
 
-  function supprimerDevoirUI(idDevoir) {
-    if (!confirm('Voulez-vous vraiment supprimer ce devoir ?')) return;
+      calculerCharge(devoirsFiltres);
 
-    callAPI('supprimerDevoir', { idDevoir: idDevoir })
-      .then(response => {
-        if (!response || !response.success) {
-          afficherErreur(response ? response.error.message : 'Erreur lors de la suppression');
-        } else {
-          afficherToast('Devoir supprimé');
-          rafraichirDonnees();
+      if (devoirsFiltres.length === 0) {
+        container.innerHTML += '<div style="text-align:center; padding:30px 20px; color:var(--muted); font-weight:800;">Aucun devoir pour cette sélection. Bien joué ! 🎉</div>';
+        return;
+      }
+      
+      let html = '';
+      let currentGroup = '';
+
+      devoirsFiltres.forEach(d => {
+        let dateObj = d.Date_Echeance ? new Date(d.Date_Echeance) : null;
+        let dateStr = dateObj ? dateObj.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }) : 'Sans date';
+        
+        if (dateStr !== currentGroup) {
+          html += `<div class="jour-header"><div class="jour-title">${dateStr.charAt(0).toUpperCase() + dateStr.slice(1)}</div></div>`;
+          currentGroup = dateStr;
         }
-      })
-      .catch(afficherErreur);
-  }
 
-  // =====================================================
-  // UTILITAIRES INTERFACE ET BINDINGS
-  // =====================================================
-  function remplirListesDeroulantes() {
-    const selectEnfant = document.getElementById('formEnfant');
-    selectEnfant.innerHTML = '<option value="">-- Choisir un enfant --</option>' +
-      enfants.map(e => `<option value="${e.ID_Enfant}">${echapperHTML(e.Prenom || e.Nom || e.ID_Enfant)}</option>`).join('');
+        const estFait = estFaitOuAnnule(d);
+        const nomMatiere = getNomMatiere(d.ID_Matiere);
+        const nomEnfant = getNomEnfant(d.ID_Enfant);
+        
+        let badgeEnfantHTML = enfantSelectionne === 'TOUS' ? `<span class="badge badge-enfant">👤 ${echapperHTML(nomEnfant)}</span>` : '';
+        let badgePriorite = (d.Priorite === 'HAUTE' || d.Priorite === 'URGENTE') ? `<span class="badge badge-haute">🔥 ${d.Priorite}</span>` : '';
+        let badgeEtapes = (d.Etape && d.Nb_Etapes) ? `<span class="badge">Étape ${d.Etape}/${d.Nb_Etapes}</span>` : '';
 
-    const selectMatiere = document.getElementById('formMatiere');
-    selectMatiere.innerHTML = '<option value="">-- Choisir une matière --</option>' +
-      matieres.map(m => `<option value="${m.ID_Matiere || m.Code}">${echapperHTML(m.Matiere || m.Code)}</option>`).join('');
+        const dateKey = d.Date_Echeance ? d.Date_Echeance : '';
+        const aujourdhuiKey = new Date().toISOString().split('T')[0];
+        const estEnRetard = !estFait && dateKey && dateKey < aujourdhuiKey;
 
-    const selectType = document.getElementById('formType');
-    selectType.innerHTML = types.length > 0
-      ? types.map(t => `<option value="${t.Code || t.Type}">${echapperHTML(t.Libelle || t.Type || t.Code)}</option>`).join('')
-      : '<option value="DEVOIR">Devoir</option><option value="LECON">Leçon</option>';
+        if (vueActuelle === 'tous' && !idCibleAAncre && !estFait && dateObj) {
+          let dateD = new Date(dateObj);
+          dateD.setHours(0, 0, 0, 0);
+          if (dateD.getTime() >= aujourdhui.getTime()) {
+            idCibleAAncre = 'devoir-' + d.ID_Devoir;
+          }
+        }
 
-    const selectPriorite = document.getElementById('formPriorite');
-    selectPriorite.innerHTML = priorites.length > 0
-      ? priorites.map(p => `<option value="${p.Code || p.Priorite}">${echapperHTML(p.Libelle || p.Priorite || p.Code)}</option>`).join('')
-      : '<option value="NORMALE">Normale</option><option value="HAUTE">Haute</option><option value="URGENTE">Urgente</option>';
+        html += `
+          <article id="devoir-${d.ID_Devoir}" class="devoir ${estFait ? 'fait' : ''} ${estEnRetard ? 'en-retard' : ''}">
+            <div class="devoir-top">
+              <button
+                class="devoir-check"
+                type="button"
+                onclick="cocherDevoir('${d.ID_Devoir}', '${d.Statut}')"
+                aria-label="${estFait ? 'Marquer comme à faire' : 'Marquer comme fait'}">
+                ${estFait ? '✓' : ''}
+              </button>
 
-    const selectStatut = document.getElementById('formStatut');
-    selectStatut.innerHTML = statuts.length > 0
-      ? statuts.map(s => `<option value="${s.Code || s.Statut}">${echapperHTML(s.Libelle || s.Statut || s.Code)}</option>`).join('')
-      : '<option value="A_FAIRE">À faire</option><option value="EN_COURS">En cours</option><option value="FAIT">Fait</option><option value="REPORTE">Reporté</option><option value="ANNULE">Annulé</option>';
-  }
+              <div class="devoir-main">
+                <div class="devoir-title-row">
+                  <div class="devoir-titre">${echapperHTML(d.Titre)}</div>
+                  <button class="devoir-menu" type="button" onclick="toggleMenuDevoir(this)" aria-label="Actions du devoir" aria-expanded="false">•••</button>
+                </div>
 
-  function afficherToast(message) {
-    const toast = document.getElementById('toast');
-    toast.innerText = message;
-    toast.classList.remove('hidden');
-    setTimeout(() => {
-      toast.classList.add('hidden');
-    }, 3000);
-  }
+                <div class="devoir-meta">
+                  ${badgeEnfantHTML}
+                  <span>📚 ${echapperHTML(nomMatiere)}</span>
+                  <span>⏱ ${d.Duree_Estimee_Min || 0} min</span>
+                  ${badgePriorite} ${badgeEtapes}
+                </div>
 
-  function afficherErreur(erreur) {
-    const msg = typeof erreur === 'object' && erreur.message ? erreur.message : String(erreur);
-    afficherToast('⚠️ ' + msg);
-  }
+                ${estEnRetard ? `<div class="retard-label">En retard</div>` : ''}
+                ${d.Description ? `<div class="devoir-description">${echapperHTML(d.Description)}</div>` : ''}
+              </div>
+            </div>
 
-  function echapperHTML(str) {
-    if (!str) return '';
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
-  }
+            <div class="devoir-actions hidden">
+              <button class="icon-btn" type="button" onclick="editerDevoir('${d.ID_Devoir}')">Modifier</button>
+              <button class="icon-btn danger" type="button" onclick="supprimerDevoirUI('${d.ID_Devoir}')">Supprimer</button>
+            </div>
+          </article>
+        `;
+      });
 
-  document.addEventListener('click', function(e) {
-    if (!e.target.closest('.devoir-menu') && !e.target.closest('.devoir-actions')) {
+      container.innerHTML += html;
+
+      if (vueActuelle === 'tous') {
+        setTimeout(() => {
+          if (idCibleAAncre) {
+            const el = document.getElementById(idCibleAAncre);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 150);
+      }
+    }
+
+    function calculerCharge(devoirsFiltres) {
+      const container = document.getElementById('chargeContainer');
+      if (!container) return;
+
+      const totalMin = devoirsFiltres.reduce((sum, d) => sum + Number(d.Duree_Estimee_Min || 0), 0);
+      const faitsMin = devoirsFiltres
+        .filter(d => d.Statut === 'FAIT' || d.Statut === 'ANNULE' || d.Statut === 'TERMINE')
+        .reduce((sum, d) => sum + Number(d.Duree_Estimee_Min || 0), 0);
+
+      const nbDevoirsTotal = devoirsFiltres.length;
+      const nbDevoirsFaits = devoirsFiltres.filter(d => d.Statut === 'FAIT' || d.Statut === 'ANNULE' || d.Statut === 'TERMINE').length;
+
+      if (nbDevoirsTotal === 0 && enfantSelectionne === 'TOUS') {
+        container.innerHTML = '';
+        return;
+      }
+
+      const pourcentage = totalMin > 0 ? Math.round((faitsMin / totalMin) * 100) : 0;
+
+      let labelVue = "Aujourd'hui";
+      if (vueActuelle === 'semaine') labelVue = "À venir";
+      if (vueActuelle === 'tous') labelVue = "Tous";
+
+      container.innerHTML = `
+        <div class="charge-card">
+          <div>
+            <div class="charge-number">${faitsMin} / ${totalMin} min</div>
+          </div>
+          <div class="charge-detail">
+            ${nbDevoirsFaits} sur ${nbDevoirsTotal} devoir(s) terminé(s) (${labelVue})
+          </div>
+          <div class="progress">
+            <div class="progress-bar" style="width: ${pourcentage}%;"></div>
+          </div>
+        </div>
+      `;
+    }
+
+    function toggleMenuDevoir(button) {
+      const card = button.closest('.devoir');
+      if (!card) return;
+
+      const menu = card.querySelector('.devoir-actions');
+      if (!menu) return;
+
+      const ouvert = !menu.classList.contains('hidden');
+
       document.querySelectorAll('.devoir-actions').forEach(el => el.classList.add('hidden'));
       document.querySelectorAll('.devoir-menu').forEach(el => el.setAttribute('aria-expanded', 'false'));
+
+      if (!ouvert) {
+        menu.classList.remove('hidden');
+        button.setAttribute('aria-expanded', 'true');
+      }
     }
-  });
+
+    function cocherDevoir(idDevoir, statutActuel) {
+      const estDejaFait = (statutActuel === 'FAIT' || statutActuel === 'TERMINE' || statutActuel === 'ANNULE');
+      const nouveauStatut = estDejaFait ? 'A_FAIRE' : 'FAIT';
+      
+      callAPI('changerStatut', { idDevoir: idDevoir, nouveauStatut: nouveauStatut })
+        .then(response => {
+          if (!response || !response.success) {
+            afficherErreur(response ? response.error.message : 'Erreur statut');
+            rafraichirDonnees();
+          } else {
+            if (response.data && response.data.gamification) {
+              const gami = response.data.gamification;
+
+              let profilLocal = profils.find(x => String(x.ID_Enfant) === String(enfantSelectionne));
+              if (profilLocal) {
+                profilLocal.XP_Totale = gami.nouveauXPTotal;
+                if (profilLocal.XP_Disponibles !== undefined) {
+                  profilLocal.XP_Disponibles += gami.xpGagnes;
+                } else {
+                  profilLocal.XP_Disponibles = (profilLocal.XP_Disponibles || gami.nouveauXPTotal);
+                }
+                profilLocal.Niveau_Actuel = gami.niveau;
+                profilLocal.Titre_Actuel = gami.titre;
+              }
+
+              let messageToast = nouveauStatut === 'FAIT' 
+                ? `🎉 Validé ! +${gami.xpGagnes} XP` 
+                : 'Devoir remis à faire';
+
+              if (gami.raisonsXP && gami.raisonsXP.length > 0) {
+                messageToast += ` (${gami.raisonsXP.join(', ')})`;
+              }
+
+              if (gami.levelUp) {
+                alert(`⭐ NIVEAU SUPÉRIEUR ! ⭐\n\nBravo ! Passage au niveau ${gami.niveau} : "${gami.titre}" ! 🚀`);
+              }
+
+              afficherToast(messageToast);
+            } else {
+              afficherToast(nouveauStatut === 'FAIT' ? 'Devoir validé ! 🎉' : 'Devoir remis à faire');
+            }
+            rafraichirDonnees();
+          }
+        })
+        .catch(err => {
+          afficherErreur(err);
+          rafraichirDonnees();
+        });
+    }
+
+    function ouvrirFormulaire(idDevoir) {
+      const modal = document.getElementById('modalDevoir');
+      const form = document.getElementById('formDevoir');
+      const titreModal = document.getElementById('modalTitre');
+      const errDiv = document.getElementById('formErreur');
+
+      errDiv.classList.add('hidden');
+      errDiv.innerText = '';
+      form.reset();
+
+      document.getElementById('advancedFields').classList.add('hidden');
+      document.getElementById('advancedToggle').setAttribute('aria-expanded', 'false');
+
+      if (idDevoir) {
+        const d = devoirs.find(x => String(x.ID_Devoir) === String(idDevoir));
+        if (d) {
+          titreModal.innerText = 'Modifier le devoir';
+          document.getElementById('formIdDevoir').value = d.ID_Devoir;
+          document.getElementById('formEnfant').value = d.ID_Enfant || '';
+          document.getElementById('formMatiere').value = d.ID_Matiere || '';
+          document.getElementById('formTitre').value = d.Titre || '';
+          
+          let dateVal = '';
+          if (d.Date_Echeance) {
+            const dt = new Date(d.Date_Echeance);
+            dateVal = !isNaN(dt.getTime()) ? dt.toISOString().split('T')[0] : d.Date_Echeance;
+          }
+          document.getElementById('formDate').value = dateVal;
+          document.getElementById('formDuree').value = d.Duree_Estimee_Min || 20;
+
+          document.getElementById('formDescription').value = d.Description || '';
+          document.getElementById('formType').value = d.Type || 'DEVOIR';
+          document.getElementById('formPriorite').value = d.Priorite || 'NORMALE';
+          document.getElementById('formEtape').value = d.Etape || '';
+          document.getElementById('formNbEtapes').value = d.Nb_Etapes || '';
+          document.getElementById('formStatut').value = d.Statut || 'A_FAIRE';
+
+          if (d.Description || d.Etape || d.Nb_Etapes || d.Priorite === 'HAUTE' || d.Priorite === 'URGENTE') {
+            document.getElementById('advancedFields').classList.remove('hidden');
+            document.getElementById('advancedToggle').setAttribute('aria-expanded', 'true');
+          }
+        }
+      } else {
+        titreModal.innerText = 'Ajouter un devoir';
+        document.getElementById('formIdDevoir').value = '';
+        
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('formDate').value = today;
+
+        if (enfantSelectionne !== 'TOUS') {
+          document.getElementById('formEnfant').value = enfantSelectionne;
+        }
+      }
+
+      modal.classList.remove('hidden');
+      document.body.classList.add('modal-open');
+    }
+
+    function editerDevoir(idDevoir) {
+      ouvrirFormulaire(idDevoir);
+    }
+
+    function fermerFormulaire() {
+      const modal = document.getElementById('modalDevoir');
+      modal.classList.add('hidden');
+      document.body.classList.remove('modal-open');
+    }
+
+    function toggleOptionsAvancees() {
+      const fields = document.getElementById('advancedFields');
+      const toggleBtn = document.getElementById('advancedToggle');
+      const cache = fields.classList.contains('hidden');
+
+      if (cache) {
+        fields.classList.remove('hidden');
+        toggleBtn.setAttribute('aria-expanded', 'true');
+      } else {
+        fields.classList.add('hidden');
+        toggleBtn.setAttribute('aria-expanded', 'false');
+      }
+    }
+
+    function sauvegarderDevoir(event) {
+      event.preventDefault();
+      const btnSave = document.getElementById('btnSauvegarder');
+      const errDiv = document.getElementById('formErreur');
+
+      errDiv.classList.add('hidden');
+      errDiv.innerText = '';
+
+      const idDevoir = document.getElementById('formIdDevoir').value;
+      const payload = {
+        idEnfant: document.getElementById('formEnfant').value,
+        idMatiere: document.getElementById('formMatiere').value,
+        titre: document.getElementById('formTitre').value.trim(),
+        dateEcheance: document.getElementById('formDate').value,
+        dureeEstimeeMin: Number(document.getElementById('formDuree').value || 0),
+        description: document.getElementById('formDescription').value.trim(),
+        type: document.getElementById('formType').value || 'DEVOIR',
+        priorite: document.getElementById('formPriorite').value || 'NORMALE',
+        etape: document.getElementById('formEtape').value || '',
+        nbEtapes: document.getElementById('formNbEtapes').value || '',
+        statut: document.getElementById('formStatut').value || 'A_FAIRE'
+      };
+
+      if (!payload.idEnfant || !payload.idMatiere || !payload.titre || !payload.dateEcheance) {
+        errDiv.innerText = 'Veuillez remplir tous les champs obligatoires.';
+        errDiv.classList.remove('hidden');
+        return;
+      }
+
+      btnSave.disabled = true;
+      btnSave.innerText = 'Enregistrement…';
+
+      const action = idDevoir ? 'modifierDevoir' : 'ajouterDevoir';
+      const apiPayload = idDevoir ? { idDevoir: idDevoir, data: payload } : { data: payload };
+
+      callAPI(action, apiPayload)
+        .then(response => {
+          btnSave.disabled = false;
+          btnSave.innerText = 'Enregistrer';
+
+          if (!response || !response.success) {
+            const msg = response && response.error ? response.error.message : 'Erreur lors de l’enregistrement';
+            errDiv.innerText = msg;
+            errDiv.classList.remove('hidden');
+          } else {
+            fermerFormulaire();
+            afficherToast(idDevoir ? 'Devoir modifié avec succès !' : 'Devoir ajouté avec succès !');
+            rafraichirDonnees();
+          }
+        })
+        .catch(err => {
+          btnSave.disabled = false;
+          btnSave.innerText = 'Enregistrer';
+          errDiv.innerText = String(err);
+          errDiv.classList.remove('hidden');
+        });
+    }
+
+    function supprimerDevoirUI(idDevoir) {
+      if (!confirm('Voulez-vous vraiment supprimer ce devoir ?')) return;
+
+      callAPI('supprimerDevoir', { idDevoir: idDevoir })
+        .then(response => {
+          if (!response || !response.success) {
+            afficherErreur(response ? response.error.message : 'Erreur lors de la suppression');
+          } else {
+            afficherToast('Devoir supprimé');
+            rafraichirDonnees();
+          }
+        })
+        .catch(afficherErreur);
+    }
+
+    function remplirListesDeroulantes() {
+      const selectEnfant = document.getElementById('formEnfant');
+      selectEnfant.innerHTML = '<option value="">-- Choisir un enfant --</option>' +
+        enfants.map(e => `<option value="${e.ID_Enfant}">${echapperHTML(e.Prenom || e.Nom || e.ID_Enfant)}</option>`).join('');
+
+      const selectMatiere = document.getElementById('formMatiere');
+      selectMatiere.innerHTML = '<option value="">-- Choisir une matière --</option>' +
+        matieres.map(m => `<option value="${m.ID_Matiere || m.Code}">${echapperHTML(m.Matiere || m.Code)}</option>`).join('');
+
+      const selectType = document.getElementById('formType');
+      selectType.innerHTML = types.length > 0
+        ? types.map(t => `<option value="${t.Code || t.Type}">${echapperHTML(t.Libelle || t.Type || t.Code)}</option>`).join('')
+        : '<option value="DEVOIR">Devoir</option><option value="LECON">Leçon</option>';
+
+      const selectPriorite = document.getElementById('formPriorite');
+      selectPriorite.innerHTML = priorites.length > 0
+        ? priorites.map(p => `<option value="${p.Code || p.Priorite}">${echapperHTML(p.Libelle || p.Priorite || p.Code)}</option>`).join('')
+        : '<option value="NORMALE">Normale</option><option value="HAUTE">Haute</option><option value="URGENTE">Urgente</option>';
+
+      const selectStatut = document.getElementById('formStatut');
+      selectStatut.innerHTML = statuts.length > 0
+        ? statuts.map(s => `<option value="${s.Code || s.Statut}">${echapperHTML(s.Libelle || s.Statut || s.Code)}</option>`).join('')
+        : '<option value="A_FAIRE">À faire</option><option value="EN_COURS">En cours</option><option value="FAIT">Fait</option><option value="REPORTE">Reporté</option><option value="ANNULE">Annulé</option>';
+    }
+
+    function afficherToast(message) {
+      const toast = document.getElementById('toast');
+      toast.innerText = message;
+      toast.classList.remove('hidden');
+      setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 3000);
+    }
+
+    function afficherErreur(erreur) {
+      const msg = typeof erreur === 'object' && erreur.message ? erreur.message : String(erreur);
+      afficherToast('⚠️ ' + msg);
+    }
+
+    function echapperHTML(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.devoir-menu') && !e.target.closest('.devoir-actions')) {
+        document.querySelectorAll('.devoir-actions').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('.devoir-menu').forEach(el => el.setAttribute('aria-expanded', 'false'));
+      }
+    });
   </script>
 </body>
 </html>
