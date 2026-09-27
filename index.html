@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#f5f6f8">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>Devoirs Famille</title>
+  <style>
+  :root {
+    --bg: #e9f5ff;
+    --bg-deep: #d7ecff;
+    --card: #ffffff;
+    --text: #18233f;
+    --muted: #64708a;
+    --border: #c5d7ef;
+    --primary: #3f63ff;
+    --primary-dark: #2945c9;
+    --yellow: #ffd43b;
+    --yellow-dark: #d9a900;
+    --blue: #25a9f4;
+    --purple: #8b5cf6;
+    --pink: #ff5fa2;
+    --green: #20bf6b;
+    --red: #ff5c57;
+    --orange: #ff9f43;
+    --nav: #1b2a52;
+    --radius: 18px;
+    --nav-height: 72px;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { 
+    height: 100%; 
+    background: var(--bg); 
+    -webkit-text-size-adjust: 100%; 
+    text-size-adjust: 100%; 
+  }
+
+  body {
+    margin: 0;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 100%;
+    
+    font-family: "Arial Rounded MT Bold", "Trebuchet MS", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background:
+      radial-gradient(circle at 10% 8%, rgba(255,212,59,.36) 0 38px, transparent 39px),
+      radial-gradient(circle at 95% 28%, rgba(139,92,246,.18) 0 46px, transparent 47px),
+      linear-gradient(180deg, #edf8ff 0%, #e5f2ff 100%);
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    overscroll-behavior-y: none;
+  }
+  body.modal-open { overflow: hidden; }
+  button, input, select, textarea { font: inherit; }
+  button { touch-action: manipulation; }
+
+  #app {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    max-width: 680px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  .app-header {
+    padding: calc(12px + env(safe-area-inset-top)) 14px 12px;
+    background: linear-gradient(135deg, #263b87 0%, #465eff 55%, #6e46db 100%);
+    color: #fff;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 4px solid #15244f;
+    box-shadow: 0 5px 0 rgba(21,36,79,.14);
+  }
+
+  .header-copy { min-width: 0; }
+  .app-header h1 {
+    margin: 0;
+    font-size: 24px;
+    line-height: 1;
+    font-weight: 900;
+    letter-spacing: .2px;
+    text-shadow: 0 2px 0 rgba(14,28,72,.35);
+  }
+  #dateCourante {
+    color: rgba(255,255,255,.84);
+    font-size: 12px;
+    margin-top: 6px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .header-refresh {
+    width: 44px;
+    height: 44px;
+    border: 3px solid #17264f;
+    border-radius: 14px;
+    background: var(--yellow);
+    color: #17264f;
+    font-size: 24px;
+    line-height: 1;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    box-shadow: 0 4px 0 #c59a16;
+    cursor: pointer;
+  }
+  .header-refresh:active { transform: translateY(3px); box-shadow: 0 1px 0 #c59a16; }
+  .header-refresh.spinning { animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .enfants-bar {
+    padding: 10px 12px 9px;
+    background: rgba(237,248,255,.92);
+    flex-shrink: 0;
+    z-index: 20;
+  }
+  .enfants-scroll {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding: 2px 2px 5px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .enfants-scroll::-webkit-scrollbar { display: none; }
+  .enfant-btn {
+    border: 3px solid #b9c9e3;
+    background: #fff;
+    border-radius: 999px;
+    padding: 8px 15px;
+    min-height: 42px;
+    color: var(--text);
+    font-weight: 900;
+    font-size: 14px;
+    white-space: nowrap;
+    flex: 0 0 auto;
+    cursor: pointer;
+    box-shadow: 0 3px 0 #b9c9e3;
+  }
+  .enfant-btn.active {
+    background: var(--yellow);
+    color: #1d2c51;
+    border-color: #25365f;
+    box-shadow: 0 3px 0 #b18b1f;
+    transform: translateY(-1px);
+  }
+  .enfant-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #b9c9e3; }
+
+  #contenu-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 2px 12px calc(var(--nav-height) + 88px + env(safe-area-inset-bottom));
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+  }
+
+  .charge-card {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, #fff 0%, #f7fbff 100%);
+    border: 3px solid #abc3e8;
+    border-radius: 20px;
+    padding: 15px;
+    margin: 4px 0 16px;
+    box-shadow: 0 5px 0 rgba(74,102,151,.14);
+  }
+  .charge-card::after {
+    content: "★";
+    position: absolute;
+    right: 12px;
+    top: 8px;
+    color: rgba(255,212,59,.85);
+    font-size: 34px;
+    transform: rotate(12deg);
+  }
+  .charge-card > div:first-child { display:flex; align-items:center; gap:12px; }
+  .charge-number { font-size: 25px; font-weight: 900; color: var(--primary-dark); }
+  .charge-detail { color: var(--muted); font-size: 12px; margin-top: 2px; font-weight: 700; }
+  .progress { height: 10px; background:#dce7f6; border-radius:99px; margin-top:12px; overflow:hidden; border:2px solid #bfd0e9; }
+  .progress-bar { height:100%; background:linear-gradient(90deg,var(--blue),var(--primary)); transition:width .3s ease; }
+
+  .jour-header { display:flex; align-items:center; margin:18px 3px 9px; }
+  .jour-title {
+    font-weight: 900;
+    font-size: 15px;
+    color: #25345b;
+    background: var(--yellow);
+    border: 3px solid #26375f;
+    border-radius: 10px;
+    padding: 6px 10px;
+    box-shadow: 0 3px 0 #c39a20;
+  }
+
+  .devoir {
+    position: relative;
+    background: var(--card);
+    border: 3px solid #c4d5ed;
+    border-radius: var(--radius);
+    padding: 13px;
+    margin-bottom: 10px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    box-shadow: 0 5px 0 rgba(65,92,140,.14);
+  }
+  .devoir::before {
+    content:"";
+    position:absolute;
+    left:0;
+    top:0;
+    bottom:0;
+    width:7px;
+    background:var(--blue);
+    border-radius: 15px 0 0 15px;
+  }
+  .devoir.en-retard::before { background: var(--red); }
+  .devoir-top { display:flex; gap:11px; align-items:flex-start; }
+  .devoir-check {
+    width: 38px;
+    height: 38px;
+    margin-top: 0;
+    flex-shrink:0;
+    border:3px solid #8091b0;
+    border-radius:50%;
+    background:#f5f8fd;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    font-size:19px;
+    font-weight:900;
+    color:#fff;
+    box-shadow: 0 3px 0 #b8c6dc;
+  }
+  .devoir-check:active { transform:translateY(2px); box-shadow:0 1px 0 #b8c6dc; }
+  .devoir.fait .devoir-check { background:var(--green); border-color:#16854b; box-shadow:0 3px 0 #11733f; }
+  .devoir.fait { opacity:.62; }
+  .devoir.fait .devoir-titre { text-decoration:line-through; }
+  .devoir-main { flex:1; min-width:0; }
+  .devoir-title-row { display:flex; align-items:flex-start; gap:8px; }
+  .devoir-titre { font-weight:900; margin:0; font-size:15px; line-height:1.3; flex:1; overflow-wrap:anywhere; color:#1d2a4b; }
+  .devoir-menu {
+    width:39px; height:35px; flex:0 0 auto; margin:-3px -3px 0 0;
+    border:3px solid #c0d0e8; border-radius:11px; background:#fff; color:#304064;
+    font-weight:900; letter-spacing:2px; cursor:pointer; box-shadow:0 2px 0 #b0c0d8;
+  }
+  .devoir-menu:active, .devoir-menu[aria-expanded="true"] { transform:translateY(2px); box-shadow:none; background:#edf4ff; }
+  .devoir-description { font-size:13px; color:var(--muted); margin-top:7px; line-height:1.35; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; font-weight:600; }
+  .devoir-meta { display:flex; flex-wrap:wrap; gap:5px 6px; color:var(--muted); font-size:12px; margin-top:6px; padding-right:30px; align-items:center; }
+  .badge { background:#edf3fb; border:2px solid #cfdbeb; padding:4px 8px; border-radius:999px; font-size:11px; line-height:1; font-weight:900; white-space:nowrap; }
+  .badge-enfant { background:#e7f7ff; border-color:#9bdafa; color:#176186; }
+  .badge-haute, .badge-urgente { background:#ffe8e2; border-color:#ffad9d; color:#c52d26; }
+  .retard-label { display:inline-flex; width:fit-content; background:#ffe5df; border:2px solid #ff9b8e; color:#c83229; padding:4px 8px; border-radius:999px; font-size:11px; font-weight:900; margin-top:6px; }
+  .devoir-actions { display:flex; justify-content:flex-end; gap:8px; border-top:2px dashed #d8e3f2; padding-top:9px; }
+  .devoir-actions.hidden { display:none; }
+  .icon-btn { border:3px solid #c5d5e9; background:#f7faff; min-height:40px; padding:7px 13px; border-radius:11px; font-size:13px; font-weight:900; cursor:pointer; color:#25345b; box-shadow:0 2px 0 #b4c6df; }
+  .icon-btn:active { transform:translateY(2px); box-shadow:none; }
+  .icon-btn.danger { color:#c92e28; background:#fff0ee; border-color:#ffc4bb; box-shadow:0 2px 0 #e8aaa1; }
+
+  .loading { min-height:190px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; color:var(--muted); font-size:14px; font-weight:800; }
+  .loading-spinner { width:24px; height:24px; border:4px solid #c9d9ee; border-top-color:var(--pink); border-radius:50%; animation:spin .8s linear infinite; }
+
+  .tabs-bottom {
+    position:fixed; bottom:0; left:0; right:0; min-height:var(--nav-height);
+    background:rgba(27,42,82,.97); border-top:4px solid #12203f;
+    display:flex; justify-content:space-around; padding:4px 7px env(safe-area-inset-bottom);
+    z-index:100; box-shadow:0 -8px 22px rgba(18,32,63,.18);
+  }
+  .tab { background:transparent; border:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; color:#b9c8e8; width:33.33%; min-height:58px; padding:6px 0; cursor:pointer; border-radius:14px; font-weight:900; }
+  .tab.active { color:#1c2b50; background:var(--yellow); box-shadow:0 3px 0 #c39a20; }
+  .tab-icon { font-size:20px; line-height:1; }
+  .tab-label { font-size:11px; font-weight:900; }
+
+  .btn-fab {
+    position:fixed; bottom:calc(var(--nav-height) + 14px + env(safe-area-inset-bottom));
+    right:max(14px, calc((100vw - 680px) / 2 + 14px));
+    width:58px; height:58px; border-radius:18px; background:var(--yellow); color:#19284d;
+    border:4px solid #1a2b54; font-size:32px; line-height:1; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 6px 0 #b68d16, 0 9px 18px rgba(31,55,102,.2); z-index:110; cursor:pointer; transform:rotate(-3deg);
+  }
+  .btn-fab:active { transform:translateY(4px) rotate(-3deg); box-shadow:0 2px 0 #b68d16; }
+
+  .modal { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; padding:16px; z-index:200; }
+  .modal.hidden { display:none; }
+  .modal-backdrop { position:absolute; inset:0; background:rgba(12,22,49,.72); backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px); }
+  .modal-content { position:relative; width:min(100%, 430px); max-height:min(88dvh,780px); overflow-y:auto; background:#f5f9ff; border:4px solid #1c2f5d; border-radius:24px; padding:12px 16px 16px; box-shadow:0 18px 50px rgba(0,0,0,.32); animation:popIn .18s ease-out; -webkit-overflow-scrolling:touch; }
+  .modal-handle { width:40px; height:5px; border-radius:99px; background:#9bb1d1; margin:2px auto 10px; }
+  @keyframes popIn { from{transform:scale(.94); opacity:0} to{transform:scale(1); opacity:1} }
+  .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+  .modal-header h2 { margin:0; font-size:21px; font-weight:900; color:#20335f; }
+  .close { width:42px; height:42px; border:3px solid #c4d2e7; border-radius:12px; background:#fff; color:#425170; font-size:27px; line-height:1; cursor:pointer; box-shadow:0 2px 0 #b7c6dc; }
+  .close:active { transform:translateY(2px); box-shadow:none; }
+
+  form label { display:block; font-weight:900; font-size:12px; color:#53617a; margin-bottom:11px; }
+  form input, form select, form textarea { width:100%; min-height:48px; margin-top:5px; border:3px solid #c7d7eb; border-radius:12px; padding:10px 12px; background:#fff; color:var(--text); font-size:16px; font-weight:700; }
+  form textarea { resize:vertical; min-height:90px; }
+  form input:focus, form select:focus, form textarea:focus { border-color:var(--primary); outline:none; background:#fff; box-shadow:0 0 0 4px rgba(63,99,255,.13); }
+  .form-primary-grid, .form-secondary-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .form-primary-grid { margin-bottom:1px; }
+  .input-suffix { position:relative; }
+  .input-suffix input { padding-right:42px; }
+  .input-suffix span { position:absolute; right:12px; top:50%; transform:translateY(-7%); color:var(--muted); font-size:13px; pointer-events:none; font-weight:900; }
+  .advanced-toggle { width:100%; min-height:43px; margin:2px 0 9px; padding:10px 12px; background:#e8f2ff; border:3px solid #bfd1e9; border-radius:12px; display:flex; align-items:center; justify-content:space-between; color:#2b3e68; font-size:13px; font-weight:900; box-shadow:0 2px 0 #afc2dc; }
+  .advanced-toggle:active { transform:translateY(2px); box-shadow:none; }
+  .advanced-fields.hidden { display:none; }
+  .modal-actions { position:sticky; bottom:calc(-18px - env(safe-area-inset-bottom)); background:#f5f9ff; margin:6px -16px -18px; padding:10px 16px calc(18px + env(safe-area-inset-bottom)); border-top:3px solid #c7d7eb; }
+  .btn-block { width:100%; min-height:52px; background:var(--green); color:#fff; border:4px solid #116e44; padding:11px 14px; border-radius:14px; font-size:17px; font-weight:900; cursor:pointer; box-shadow:0 4px 0 #0c5c39; text-shadow:0 2px 0 rgba(0,0,0,.18); }
+  .btn-block:active { transform:translateY(4px); box-shadow:0 0 0 #0c5c39; }
+  .btn-block:disabled { background:#a6b1c4; border-color:#78869d; box-shadow:0 3px 0 #647188; }
+  .form-error { margin:4px 0 10px; padding:10px 12px; border-radius:12px; background:#fff0ee; border:3px solid #ffb5ac; color:#be312b; font-size:13px; font-weight:800; }
+  .toast { position:fixed; top:calc(10px + env(safe-area-inset-top)); left:50%; max-width:calc(100vw - 28px); transform:translateX(-50%); background:#1b2a52; color:#fff; border:3px solid #0f1d3b; padding:11px 16px; border-radius:999px; font-size:13px; font-weight:900; z-index:300; box-shadow:0 5px 20px rgba(13,27,57,.28); }
+  .hidden { display:none !important; }
+
+  @media (min-width:681px) {
+    .tabs-bottom { left:50%; right:auto; width:680px; transform:translateX(-50%); border-left:4px solid #12203f; border-right:4px solid #12203f; border-radius:18px 18px 0 0; }
+  }
+
+  @media (max-width: 680px) {
+    :root { --nav-height: 76px; }
+
+    .app-header h1 { font-size: 28px; }
+    #dateCourante { font-size: 15px; }
+    .enfant-btn { font-size: 17px; min-height: 48px; padding: 10px 18px; }
+    
+    .charge-card { padding: 20px; margin-bottom: 22px; }
+    .charge-number { font-size: 30px; }
+    .charge-detail { font-size: 15px; line-height: 1.35; }
+    
+    .jour-header { margin: 24px 0 12px; }
+    .jour-title { font-size: 18px; padding: 8px 12px; }
+
+    .devoir { padding: 18px; margin-bottom: 14px; gap: 14px; }
+    .devoir-top { gap: 14px; }
+    .devoir-check { width: 44px; height: 44px; font-size: 22px; border-width: 3px; }
+    .devoir-titre { font-size: 19px; line-height: 1.3; }
+    .devoir-description { font-size: 16px; line-height: 1.4; margin-top: 8px; }
+    .devoir-meta { gap: 8px; font-size: 15px; margin-top: 8px; }
+    
+    .badge, .retard-label { font-size: 14px; padding: 6px 10px; }
+
+    .devoir-actions { gap: 10px; padding-top: 12px; }
+    .icon-btn { min-height: 46px; padding: 10px 16px; font-size: 16px; }
+
+    .tabs-bottom { padding-top: 8px; }
+    .tab { min-height: 64px; padding: 10px 0; gap: 4px; }
+    .tab-icon { font-size: 26px; }
+    .tab-label { font-size: 14px; }
+
+    .btn-fab {
+      width: 66px;
+      height: 66px;
+      right: 18px;
+      bottom: calc(var(--nav-height) + 18px + env(safe-area-inset-bottom));
+      font-size: 36px;
+      border-radius: 20px;
+    }
+
+    .modal-content {
+      width: calc(100% - 24px);
+      max-width: 460px;
+      margin: 0 auto 12px;
+      max-height: 85dvh;
+      border-radius: 24px;
+      padding: 24px 20px;
+    }
+    .modal-header h2 { font-size: 24px; }
+    .close { font-size: 32px; min-width: 46px; min-height: 46px; }
+    
+    form label { font-size: 15px; margin-bottom: 14px; }
+    form input, form select, form textarea {
+      min-height: 52px;
+      padding: 14px;
+      font-size: 17px;
+    }
+    form textarea { min-height: 110px; }
+
+    .form-primary-grid,
+    .form-secondary-grid {
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+
+    .advanced-toggle { min-height: 50px; font-size: 16px; }
+    .btn-block { min-height: 58px; font-size: 19px; }
+    .form-error { font-size: 15px; line-height: 1.4; }
+    .toast { font-size: 15px; padding: 14px 18px; }
+  }
+  </style>
+</head>
+<body>
+  <div id="app">
+
+    <header class="app-header">
+      <div class="header-copy">
+        <h1>⭐ Devoirs Famille</h1>
+        <div id="dateCourante"></div>
+      </div>
+      <button class="header-refresh" type="button" onclick="rafraichirDonnees()" aria-label="Actualiser">
+        ↻
+      </button>
+    </header>
+
+    <section class="enfants-bar" aria-label="Filtrer par enfant">
+      <div id="listeEnfants" class="enfants-scroll"></div>
+    </section>
+
+    <main id="contenu-scroll">
+      <section id="chargeContainer"></section>
+
+      <div id="contenu">
+        <div class="loading">
+          <div class="loading-spinner" aria-hidden="true"></div>
+          <span>Chargement…</span>
+        </div>
+      </div>
+    </main>
+
+    <button class="btn-fab" onclick="ouvrirFormulaire()" aria-label="Ajouter un devoir" title="Ajouter un devoir">
+      <span aria-hidden="true">+</span>
+    </button>
+
+    <nav class="tabs-bottom" aria-label="Navigation principale">
+      <button id="tabAujourdHui" class="tab active" type="button" onclick="changerVue('aujourdhui')">
+        <span class="tab-icon">🎯</span>
+        <span class="tab-label">Aujourd’hui</span>
+      </button>
+      <button id="tabSemaine" class="tab" type="button" onclick="changerVue('semaine')">
+        <span class="tab-icon">🚀</span>
+        <span class="tab-label">À venir</span>
+      </button>
+      <button id="tabTous" class="tab" type="button" onclick="changerVue('tous')">
+        <span class="tab-icon">🏆</span>
+        <span class="tab-label">Tous</span>
+      </button>
+    </nav>
+  </div>
+
+  <div id="modalDevoir" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitre">
+    <div class="modal-backdrop" onclick="fermerFormulaire()"></div>
+
+    <div class="modal-content">
+      <div class="modal-handle" aria-hidden="true"></div>
+
+      <div class="modal-header">
+        <h2 id="modalTitre">Ajouter un devoir</h2>
+        <button class="close" type="button" onclick="fermerFormulaire()" aria-label="Fermer">×</button>
+      </div>
+
+      <form id="formDevoir" onsubmit="sauvegarderDevoir(event)">
+        <input type="hidden" id="formIdDevoir">
+
+        <div class="form-primary-grid">
+          <label>
+            Enfant
+            <select id="formEnfant" required></select>
+          </label>
+
+          <label>
+            Matière
+            <select id="formMatiere" required></select>
+          </label>
+        </div>
+
+        <label>
+          Titre
+          <input type="text" id="formTitre" required maxlength="200" autocomplete="off" enterkeyhint="next" placeholder="Ex. Exercices p. 42">
+        </label>
+
+        <div class="form-secondary-grid">
+          <label>
+            Échéance
+            <input type="date" id="formDate" required>
+          </label>
+
+          <label>
+            Temps
+            <div class="input-suffix">
+              <input type="number" id="formDuree" min="0" step="5" value="20" inputmode="numeric">
+              <span>min</span>
+            </div>
+          </label>
+        </div>
+
+        <button class="advanced-toggle" id="advancedToggle" type="button" onclick="toggleOptionsAvancees()" aria-expanded="false">
+          <span>Plus d’options</span><span id="advancedChevron">⌄</span>
+        </button>
+
+        <div id="advancedFields" class="advanced-fields hidden">
+          <label>
+            Description
+            <textarea id="formDescription" rows="3" placeholder="Consigne, détail utile…"></textarea>
+          </label>
+
+          <div class="form-secondary-grid">
+            <label>
+              Type
+              <select id="formType" required></select>
+            </label>
+
+            <label>
+              Priorité
+              <select id="formPriorite"></select>
+            </label>
+          </div>
+
+          <div class="form-secondary-grid">
+            <label>
+              Étape
+              <input type="number" id="formEtape" min="1" inputmode="numeric">
+            </label>
+
+            <label>
+              Sur
+              <input type="number" id="formNbEtapes" min="1" inputmode="numeric">
+            </label>
+          </div>
+
+          <label>
+            Statut
+            <select id="formStatut"></select>
+          </label>
+        </div>
+
+        <div id="formErreur" class="form-error hidden"></div>
+
+        <div class="modal-actions">
+          <button type="submit" class="btn btn-primary btn-block" id="btnSauvegarder">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+  <script>
+  // =====================================================
+  // CONFIGURATION API APPS SCRIPT
+  // =====================================================
+  const API_URL = "https://script.google.com/macros/s/AKfycbwSBdQHLeLF_sGy0dVq3gtFPHIm2saKyYb2DMTidzVCXPXIdVoI1LY87mC0U8M6HhKb/exec";
+
+  let devoirs = [];
+  let enfants = [];
+  let matieres = [];
+  let priorites = [];
+  let statuts = [];
+  let types = [];
+
+  let vueActuelle = 'aujourdhui';
+  let enfantSelectionne = 'TOUS';
+
+  // Fonction générique pour interroger Google Apps Script via HTTP
+  function callAPI(action, payload) {
+    const dataToSend = Object.assign({ action: action }, payload || {});
+    return fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(dataToSend)
+    })
+    .then(res => {
+      if (!res.ok) throw new Error("Erreur réseau HTTP " + res.status);
+      return res.json();
+    });
+  }
+
+  // =====================================================
+  // INITIALISATION
+  // =====================================================
+  document.addEventListener("DOMContentLoaded", function() {
+    afficherDateCourante();
+    chargerDonneesDeReference();
+  });
+
+  function afficherDateCourante() {
+    const options = { weekday: 'long', day: 'numeric', month: 'long' };
+    const date = new Date().toLocaleDateString('fr-FR', options);
+    document.getElementById('dateCourante').innerText =
+      date.charAt(0).toUpperCase() + date.slice(1);
+  }
+
+  function rafraichirDonnees() {
+    const btn = document.querySelector('.header-refresh');
+    if (btn) btn.classList.add('spinning');
+
+    callAPI('getDevoirsFamille')
+      .then(response => {
+        if (btn) btn.classList.remove('spinning');
+        if (!response || !response.success) {
+          return afficherErreur(response ? response.error.message : 'Erreur de chargement');
+        }
+        afficherToast('Données actualisées');
+        devoirs = response.data || [];
+        afficherDevoirs();
+      })
+      .catch(err => {
+        if (btn) btn.classList.remove('spinning');
+        afficherErreur(err);
+      });
+  }
+
+  function chargerDonneesDeReference() {
+    callAPI('getInitialData')
+      .then(response => {
+        if (!response || !response.success) return afficherErreur(response ? response.error.message : 'Erreur API');
+        
+        enfants = response.data.enfants || [];
+        matieres = response.data.matieres || [];
+        statuts = response.data.statuts || [];
+        priorites = response.data.priorites || [];
+        types = response.data.types || [];
+
+        genererFiltreEnfants();
+        remplirListesDeroulantes();
+        
+        chargerDevoirs();
+      })
+      .catch(afficherErreur);
+  }
+
+  function chargerDevoirs() {
+    callAPI('getDevoirsFamille')
+      .then(response => {
+        if (!response || !response.success) return afficherErreur(response ? response.error.message : 'Erreur Devoirs');
+        
+        devoirs = response.data || [];
+        afficherDevoirs();
+      })
+      .catch(afficherErreur);
+  }
+
+  // =====================================================
+  // GESTION DE L'INTERFACE ET DES FILTRES
+  // =====================================================
+  function genererFiltreEnfants() {
+    const container = document.getElementById('listeEnfants');
+    let html = `<button class="enfant-btn active" type="button" onclick="filtrerEnfant('TOUS', this)">Tous</button>`;
+    
+    enfants.forEach(e => {
+      let nom = e.Prenom || e.Nom || e.ID_Enfant;
+      html += `<button class="enfant-btn" type="button" onclick="filtrerEnfant('${e.ID_Enfant}', this)" aria-pressed="false">${echapperHTML(nom)}</button>`;
+    });
+    
+    container.innerHTML = html;
+    container.querySelectorAll('.enfant-btn').forEach(btn => {
+      btn.setAttribute('aria-pressed', btn.classList.contains('active') ? 'true' : 'false');
+    });
+  }
+
+  function filtrerEnfant(id, btnElement) {
+    enfantSelectionne = id;
+    document.querySelectorAll('.enfant-btn').forEach(btn => {
+      btn.classList.remove('active');
+      btn.setAttribute('aria-pressed', 'false');
+    });
+    btnElement.classList.add('active');
+    btnElement.setAttribute('aria-pressed', 'true');
+    afficherDevoirs();
+  }
+
+  function changerVue(vue) {
+    vueActuelle = vue;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    
+    if (vue === 'aujourdhui') document.getElementById('tabAujourdHui').classList.add('active');
+    if (vue === 'semaine') document.getElementById('tabSemaine').classList.add('active');
+    if (vue === 'tous') document.getElementById('tabTous').classList.add('active');
+    
+    afficherDevoirs();
+  }
+
+  // =====================================================
+  // AFFICHAGE PRINCIPAL DES DEVOIRS ET DE LA CHARGE
+  // =====================================================
+  function getNomEnfant(id) {
+    const e = enfants.find(x => x.ID_Enfant === id);
+    return e ? (e.Prenom || e.Nom || id) : id;
+  }
+
+  function getNomMatiere(id) {
+    const m = matieres.find(x => x.ID_Matiere === id || x.Code === id);
+    return m ? (m.Matiere || m.Code || id) : id;
+  }
+
+  function afficherDevoirs() {
+    const container = document.getElementById('contenu');
+    
+    let devoirsFiltres = devoirs.filter(d => enfantSelectionne === 'TOUS' || d.ID_Enfant === enfantSelectionne);
+    
+    const aujourdhui = new Date();
+    aujourdhui.setHours(0, 0, 0, 0);
+    
+    if (vueActuelle === 'aujourdhui') {
+      devoirsFiltres = devoirsFiltres.filter(d => {
+        if (!d.Date_Echeance) return false;
+        let dateD = new Date(d.Date_Echeance);
+        dateD.setHours(0, 0, 0, 0);
+        return dateD.getTime() <= aujourdhui.getTime();
+      });
+    } else if (vueActuelle === 'semaine') { 
+      devoirsFiltres = devoirsFiltres.filter(d => {
+        if (d.Statut === 'FAIT' || d.Statut === 'TERMINE') return false;
+        if (!d.Date_Echeance) return false;
+        let dateD = new Date(d.Date_Echeance);
+        dateD.setHours(0, 0, 0, 0);
+        return dateD.getTime() > aujourdhui.getTime();
+      });
+    }
+
+    devoirsFiltres.sort((a, b) => {
+      let dateA = a.Date_Echeance ? new Date(a.Date_Echeance).getTime() : 0;
+      let dateB = b.Date_Echeance ? new Date(b.Date_Echeance).getTime() : 0;
+      return dateA - dateB;
+    });
+
+    calculerCharge(devoirsFiltres);
+
+    if (devoirsFiltres.length === 0) {
+      container.innerHTML = '<div style="text-align:center; padding:40px 20px; color:var(--muted);">Aucun devoir pour cette sélection. 🎉</div>';
+      return;
+    }
+    
+    let html = '';
+    let currentGroup = '';
+
+    devoirsFiltres.forEach(d => {
+      let dateObj = d.Date_Echeance ? new Date(d.Date_Echeance) : null;
+      let dateStr = dateObj ? dateObj.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }) : 'Sans date';
+      
+      if (dateStr !== currentGroup) {
+        html += `<div class="jour-header"><div class="jour-title">${dateStr.charAt(0).toUpperCase() + dateStr.slice(1)}</div></div>`;
+        currentGroup = dateStr;
+      }
+
+      const estFait = (d.Statut === 'FAIT' || d.Statut === 'TERMINE');
+      const nomMatiere = getNomMatiere(d.ID_Matiere);
+      const nomEnfant = getNomEnfant(d.ID_Enfant);
+      
+      let badgeEnfantHTML = enfantSelectionne === 'TOUS' ? `<span class="badge badge-enfant">👤 ${echapperHTML(nomEnfant)}</span>` : '';
+      let badgePriorite = (d.Priorite === 'HAUTE' || d.Priorite === 'URGENTE') ? `<span class="badge badge-haute">🔥 ${d.Priorite}</span>` : '';
+      let badgeEtapes = (d.Etape && d.Nb_Etapes) ? `<span class="badge">Étape ${d.Etape}/${d.Nb_Etapes}</span>` : '';
+
+      const dateKey = d.Date_Echeance ? d.Date_Echeance : '';
+      const aujourdhuiKey = new Date().toISOString().split('T')[0];
+      const estEnRetard = !estFait && dateKey && dateKey < aujourdhuiKey;
+
+      html += `
+        <article class="devoir ${estFait ? 'fait' : ''} ${estEnRetard ? 'en-retard' : ''}">
+          <div class="devoir-top">
+            <button
+              class="devoir-check"
+              type="button"
+              onclick="cocherDevoir('${d.ID_Devoir}', '${d.Statut}')"
+              aria-label="${estFait ? 'Marquer comme à faire' : 'Marquer comme fait'}">
+              ${estFait ? '✓' : ''}
+            </button>
+
+            <div class="devoir-main">
+              <div class="devoir-title-row">
+                <div class="devoir-titre">${echapperHTML(d.Titre)}</div>
+                <button class="devoir-menu" type="button" onclick="toggleMenuDevoir(this)" aria-label="Actions du devoir" aria-expanded="false">•••</button>
+              </div>
+
+              <div class="devoir-meta">
+                ${badgeEnfantHTML}
+                <span>📚 ${echapperHTML(nomMatiere)}</span>
+                <span>⏱ ${d.Duree_Estimee_Min || 0} min</span>
+                ${badgePriorite} ${badgeEtapes}
+              </div>
+
+              ${estEnRetard ? `<div class="retard-label">En retard</div>` : ''}
+              ${d.Description ? `<div class="devoir-description">${echapperHTML(d.Description)}</div>` : ''}
+            </div>
+          </div>
+
+          <div class="devoir-actions hidden">
+            <button class="icon-btn" type="button" onclick="editerDevoir('${d.ID_Devoir}')">Modifier</button>
+            <button class="icon-btn danger" type="button" onclick="supprimerDevoirUI('${d.ID_Devoir}')">Supprimer</button>
+          </div>
+        </article>
+      `;
+    });
+
+    container.innerHTML = html;
+  }
+
+  function toggleMenuDevoir(button) {
+    const card = button.closest('.devoir');
+    if (!card) return;
+
+    const menu = card.querySelector('.devoir-actions');
+    if (!menu) return;
+
+    const ouvert = !menu.classList.contains('hidden');
+
+    document.querySelectorAll('.devoir-actions').forEach(el => {
+      el.classList.add('hidden');
+    });
+    document.querySelectorAll('.devoir-menu').forEach(el => {
+      el.setAttribute('aria-expanded', 'false');
+    });
+
+    if (!ouvert) {
+      menu.classList.remove('hidden');
+      button.setAttribute('aria-expanded', 'true');
+    }
+  }
+
+  document.addEventListener('click', function(event) {
+    if (!event.target.closest('.devoir')) {
+      document.querySelectorAll('.devoir-actions').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.devoir-menu').forEach(el => el.setAttribute('aria-expanded', 'false'));
+    }
+  });
+
+  function toggleOptionsAvancees() {
+    const fields = document.getElementById('advancedFields');
+    const toggle = document.getElementById('advancedToggle');
+    const chevron = document.getElementById('advancedChevron');
+    if (!fields || !toggle) return;
+
+    const ouvert = fields.classList.contains('hidden');
+    fields.classList.toggle('hidden', !ouvert);
+    toggle.setAttribute('aria-expanded', ouvert ? 'true' : 'false');
+    if (chevron) chevron.textContent = ouvert ? '⌃' : '⌄';
+  }
+
+  function resetOptionsAvancees() {
+    const fields = document.getElementById('advancedFields');
+    const toggle = document.getElementById('advancedToggle');
+    const chevron = document.getElementById('advancedChevron');
+
+    if (fields) fields.classList.add('hidden');
+    if (toggle) toggle.setAttribute('aria-expanded', 'false');
+    if (chevron) chevron.textContent = '⌄';
+  }
+
+  function calculerCharge(devoirsAffiches) {
+    const chargeContainer = document.getElementById('chargeContainer');
+    const devoirsRestants = devoirsAffiches.filter(d => d.Statut !== 'FAIT' && d.Statut !== 'TERMINE' && d.Statut !== 'ANNULE');
+    
+    if (devoirsRestants.length === 0 && devoirsAffiches.length === 0) {
+      chargeContainer.innerHTML = '';
+      return;
+    }
+
+    let tempsTotal = 0;
+    devoirsRestants.forEach(d => tempsTotal += parseInt(d.Duree_Estimee_Min) || 0);
+
+    let heures = Math.floor(tempsTotal / 60);
+    let minutes = tempsTotal % 60;
+    let tempsStr = heures > 0 ? `${heures}h${minutes > 0 ? minutes : ''}` : `${minutes} min`;
+
+    let total = devoirsAffiches.length;
+    let faits = total - devoirsRestants.length;
+    let pourcentage = total === 0 ? 0 : Math.round((faits / total) * 100);
+
+    chargeContainer.innerHTML = `
+      <div class="charge-card">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div class="charge-number">${tempsStr}</div>
+            <div class="charge-detail">de travail restant (${devoirsRestants.length} tâche${devoirsRestants.length > 1 ? 's' : ''})</div>
+          </div>
+          <div style="font-size:24px;">${pourcentage === 100 ? '🎉' : '💪'}</div>
+        </div>
+        <div class="progress">
+          <div class="progress-bar" style="width: ${pourcentage}%"></div>
+        </div>
+      </div>
+    `;
+  }
+
+  // =====================================================
+  // GESTION DU FORMULAIRE (Modale)
+  // =====================================================
+  function getValeurId(obj, fallbackField) {
+    if (typeof obj === 'string') return obj;
+    return obj.ID_Enfant || obj.ID_Matiere || obj.Code || obj.ID_Statut || obj.ID_Priorite || obj.ID_Type || obj[fallbackField] || obj;
+  }
+  function getValeurLabel(obj) {
+    if (typeof obj === 'string') return obj;
+    return obj.Prenom || obj.Nom || obj.Libelle || obj.Code || obj;
+  }
+
+  function remplirListesDeroulantes() {
+    document.getElementById('formEnfant').innerHTML = enfants.map(e => `<option value="${getValeurId(e)}">${getValeurLabel(e)}</option>`).join('');
+    document.getElementById('formMatiere').innerHTML = matieres.map(m => `<option value="${getValeurId(m)}">${getValeurLabel(m)}</option>`).join('');
+    document.getElementById('formPriorite').innerHTML = priorites.map(p => `<option value="${getValeurId(p)}">${getValeurLabel(p)}</option>`).join('');
+    document.getElementById('formStatut').innerHTML = statuts.map(s => `<option value="${getValeurId(s)}">${getValeurLabel(s)}</option>`).join('');
+    document.getElementById('formType').innerHTML = types.map(t => `<option value="${getValeurId(t)}">${getValeurLabel(t)}</option>`).join('');
+  }
+
+  function ouvrirFormulaire() {
+    document.getElementById('formIdDevoir').value = '';
+    document.getElementById('formTitre').value = '';
+    document.getElementById('formDescription').value = '';
+    document.getElementById('formDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('formDuree').value = 20;
+    document.getElementById('formEtape').value = '';
+    document.getElementById('formNbEtapes').value = '';
+    document.getElementById('formStatut').value = 'A_FAIRE';
+    
+    document.getElementById('modalTitre').innerText = 'Ajouter un devoir';
+    document.getElementById('modalDevoir').classList.remove('hidden');
+    document.body.classList.add('modal-open');
+    setTimeout(() => document.getElementById('formTitre').focus(), 250);
+  }
+
+  function fermerFormulaire() {
+    document.getElementById('modalDevoir').classList.add('hidden');
+    document.body.classList.remove('modal-open');
+  }
+
+  function editerDevoir(id) {
+    const devoir = devoirs.find(d => d.ID_Devoir == id);
+    if(!devoir) return;
+
+    document.getElementById('formIdDevoir').value = devoir.ID_Devoir || '';
+    document.getElementById('formEnfant').value = devoir.ID_Enfant || '';
+    document.getElementById('formMatiere').value = devoir.ID_Matiere || '';
+    document.getElementById('formTitre').value = devoir.Titre || '';
+    document.getElementById('formDescription').value = devoir.Description || '';
+    document.getElementById('formType').value = devoir.Type || '';
+    
+    if(devoir.Date_Echeance) {
+      let d = new Date(devoir.Date_Echeance);
+      document.getElementById('formDate').value = d.toISOString().split('T')[0];
+    }
+    
+    document.getElementById('formDuree').value = devoir.Duree_Estimee_Min || 20;
+    document.getElementById('formPriorite').value = devoir.Priorite || 'NORMALE';
+    document.getElementById('formEtape').value = devoir.Etape || '';
+    document.getElementById('formNbEtapes').value = devoir.Nb_Etapes || '';
+    document.getElementById('formStatut').value = devoir.Statut || 'A_FAIRE';
+    resetOptionsAvancees();
+
+    document.getElementById('modalTitre').innerText = 'Modifier un devoir';
+    document.getElementById('modalDevoir').classList.remove('hidden');
+  }
+
+  // =====================================================
+  // INTERACTIONS AVEC LE BACKEND (API HTTP)
+  // =====================================================
+  function sauvegarderDevoir(event) {
+    event.preventDefault();
+    
+    const btn = document.getElementById('btnSauvegarder');
+    btn.disabled = true;
+    btn.innerText = 'Enregistrement...';
+
+    const dataPayload = {
+      idEnfant: document.getElementById('formEnfant').value,
+      idMatiere: document.getElementById('formMatiere').value,
+      type: document.getElementById('formType').value,
+      titre: document.getElementById('formTitre').value,
+      description: document.getElementById('formDescription').value,
+      dateEcheance: document.getElementById('formDate').value,
+      dureeEstimeeMin: document.getElementById('formDuree').value,
+      priorite: document.getElementById('formPriorite').value,
+      statut: document.getElementById('formStatut').value,
+      etape: document.getElementById('formEtape').value,
+      nbEtapes: document.getElementById('formNbEtapes').value
+    };
+
+    const idDevoir = document.getElementById('formIdDevoir').value;
+    const action = idDevoir ? 'modifierDevoir' : 'ajouterDevoir';
+    const payload = idDevoir ? { idDevoir: idDevoir, data: dataPayload } : { data: dataPayload };
+
+    callAPI(action, payload)
+      .then(response => {
+        btn.disabled = false;
+        btn.innerText = 'Enregistrer';
+        if (!response || !response.success) return afficherErreur(response ? response.error.message : 'Erreur réseau');
+        
+        fermerFormulaire();
+        afficherToast('Devoir enregistré !');
+        chargerDevoirs();
+      })
+      .catch(err => {
+        btn.disabled = false;
+        btn.innerText = 'Enregistrer';
+        afficherErreur(err);
+      });
+  }
+
+  function cocherDevoir(id, statutActuel) {
+    const nouveauStatut = (statutActuel === 'FAIT' || statutActuel === 'TERMINE') ? 'A_FAIRE' : 'FAIT';
+    
+    const devoirIndex = devoirs.findIndex(d => d.ID_Devoir === id);
+    if (devoirIndex > -1) {
+      devoirs[devoirIndex].Statut = nouveauStatut;
+      afficherDevoirs(); 
+    }
+
+    callAPI('changerStatut', { idDevoir: id, nouveauStatut: nouveauStatut })
+      .then(response => {
+        if (!response || !response.success) {
+          afficherErreur(response ? response.error.message : 'Erreur');
+          return chargerDevoirs(); 
+        }
+        afficherToast(nouveauStatut === 'FAIT' ? 'Bravo ! 👏' : 'Statut mis à jour');
+        chargerDevoirs();
+      })
+      .catch(err => {
+        afficherErreur(err);
+        chargerDevoirs();
+      });
+  }
+
+  function supprimerDevoirUI(id) {
+    if (confirm('Voulez-vous vraiment supprimer ce devoir ?')) {
+      devoirs = devoirs.filter(d => d.ID_Devoir !== id);
+      afficherDevoirs();
+
+      callAPI('supprimerDevoir', { idDevoir: id })
+        .then(response => {
+          if (!response || !response.success) {
+            afficherErreur(response ? response.error.message : 'Erreur suppression');
+            return chargerDevoirs();
+          }
+          afficherToast('Devoir supprimé');
+        })
+        .catch(err => {
+          afficherErreur(err);
+          chargerDevoirs();
+        });
+    }
+  }
+
+  // =====================================================
+  // UTILITAIRES
+  // =====================================================
+  function afficherToast(message) {
+    const toast = document.getElementById('toast');
+    toast.innerText = message;
+    toast.classList.remove('hidden');
+    setTimeout(() => toast.classList.add('hidden'), 3000);
+  }
+
+  function afficherErreur(err) {
+    console.error(err);
+    const message = 'Une erreur est survenue : ' + (err.message || err);
+    const zone = document.getElementById('formErreur');
+
+    if (zone && !document.getElementById('modalDevoir').classList.contains('hidden')) {
+      zone.textContent = message;
+      zone.classList.remove('hidden');
+      return;
+    }
+
+    afficherToast(message);
+  }
+
+  function echapperHTML(str) {
+    if (!str) return '';
+    return str.toString()
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+  </script>
+</body>
+</html>
