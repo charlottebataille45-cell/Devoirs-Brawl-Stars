@@ -168,6 +168,62 @@
     overscroll-behavior-y: contain;
   }
 
+  /* Style de la carte Profil Gamification */
+  .profil-card {
+    background: linear-gradient(135deg, #263b87 0%, #465eff 60%, #7c52ff 100%);
+    border: 3px solid #17264f;
+    border-radius: 20px;
+    padding: 16px;
+    margin: 4px 0 16px;
+    color: #fff;
+    box-shadow: 0 6px 0 rgba(23,38,79,.2);
+    position: relative;
+    overflow: hidden;
+  }
+  .profil-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .profil-titre-niveau {
+    font-size: 16px;
+    font-weight: 900;
+    color: var(--yellow);
+    text-shadow: 0 1px 0 rgba(0,0,0,.2);
+  }
+  .profil-xp-badge {
+    background: rgba(255,255,255,.2);
+    border: 2px solid rgba(255,255,255,.4);
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 900;
+  }
+  .profil-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .profil-stat-box {
+    background: rgba(0,0,0,.15);
+    border: 2px solid rgba(255,255,255,.15);
+    border-radius: 12px;
+    padding: 8px 12px;
+    text-align: center;
+  }
+  .profil-stat-value {
+    font-size: 18px;
+    font-weight: 900;
+  }
+  .profil-stat-label {
+    font-size: 11px;
+    color: rgba(255,255,255,.8);
+    font-weight: 700;
+    margin-top: 2px;
+  }
+
   .charge-card {
     position: relative;
     overflow: hidden;
@@ -433,7 +489,6 @@
       <span aria-hidden="true">+</span>
     </button>
 
-    <!-- Navigation Ordre Corrigé : 1. Aujourd'hui | 2. Tous | 3. À venir -->
     <nav class="tabs-bottom" aria-label="Navigation principale">
       <button id="tabAujourdHui" class="tab active" type="button" onclick="changerVue('aujourdhui')">
         <span class="tab-icon">🎯</span>
@@ -559,11 +614,11 @@
   let priorites = [];
   let statuts = [];
   let types = [];
+  let profils = []; // 👈 Stockage local des profils de gamification
 
   let vueActuelle = 'aujourdhui';
   let enfantSelectionne = 'TOUS';
 
-  // Fonction générique pour interroger Google Apps Script via HTTP
   function callAPI(action, payload) {
     const dataToSend = Object.assign({ action: action }, payload || {});
     return fetch(API_URL, {
@@ -622,6 +677,7 @@
         statuts = response.data.statuts || [];
         priorites = response.data.priorites || [];
         types = response.data.types || [];
+        profils = response.data.profils || []; // 👈 Chargement des profils
 
         genererFiltreEnfants();
         remplirListesDeroulantes();
@@ -655,9 +711,6 @@
     });
     
     container.innerHTML = html;
-    container.querySelectorAll('.enfant-btn').forEach(btn => {
-      btn.setAttribute('aria-pressed', btn.classList.contains('active') ? 'true' : 'false');
-    });
   }
 
   function filtrerEnfant(id, btnElement) {
@@ -683,6 +736,45 @@
   }
 
   // =====================================================
+  // AFFICHAGE DU PROFIL DE GAMIFICATION
+  // =====================================================
+  function afficherProfilEnfant(idEnfant) {
+    if (idEnfant === 'TOUS') return '';
+    
+    let p = profils.find(x => String(x.ID_Enfant) === String(idEnfant)) || {
+      XP_Total: 0,
+      Niveau_Actuel: 1,
+      Titre_Actuel: "Débutant",
+      Serie_Actuelle: 0,
+      Serie_Record: 0
+    };
+
+    return `
+      <div class="profil-card">
+        <div class="profil-header">
+          <div>
+            <div style="font-size: 12px; font-weight: 700; color: rgba(255,255,255,.8);">NIVEAU ${p.Niveau_Actuel}</div>
+            <div class="profil-titre-niveau">✨ ${echapperHTML(p.Titre_Actuel)}</div>
+          </div>
+          <div class="profil-xp-badge">
+            ⭐ ${p.XP_Total} XP
+          </div>
+        </div>
+        <div class="profil-stats-grid">
+          <div class="profil-stat-box">
+            <div class="profil-stat-value">🔥 ${p.Serie_Actuelle} jour(s)</div>
+            <div class="profil-stat-label">Série en cours</div>
+          </div>
+          <div class="profil-stat-box">
+            <div class="profil-stat-value">🏆 ${p.Serie_Record} jour(s)</div>
+            <div class="profil-stat-label">Record de série</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // =====================================================
   // AFFICHAGE PRINCIPAL DES DEVOIRS ET DE LA CHARGE
   // =====================================================
   function getNomEnfant(id) {
@@ -703,13 +795,10 @@
     const aujourdhui = new Date();
     aujourdhui.setHours(0, 0, 0, 0);
 
-    // Fonction utilitaire pour vérifier si un devoir est considéré comme terminé / annulé
     const estFaitOuAnnule = (d) => d.Statut === 'FAIT' || d.Statut === 'ANNULE' || d.Statut === 'TERMINE';
-
     let idCibleAAncre = null;
     
     if (vueActuelle === 'aujourdhui') {
-      // 1. Aujourd’hui : Uniquement les devoirs à faire (A_FAIRE, EN_COURS, REPORTE, non faits) échéance <= aujourd'hui
       devoirsFiltres = devoirsFiltres.filter(d => {
         if (!d.Date_Echeance) return false;
         let dateD = new Date(d.Date_Echeance);
@@ -717,15 +806,12 @@
         return !estFaitOuAnnule(d) && dateD.getTime() <= aujourdhui.getTime();
       });
     } else if (vueActuelle === 'semaine') { 
-      // 3. À venir : Devoirs à faire dont la date est supérieure ou égale à aujourd'hui
       devoirsFiltres = devoirsFiltres.filter(d => {
         if (!d.Date_Echeance) return false;
         let dateD = new Date(d.Date_Echeance);
         dateD.setHours(0, 0, 0, 0);
         return !estFaitOuAnnule(d) && dateD.getTime() >= aujourdhui.getTime();
       });
-    } else if (vueActuelle === 'tous') {
-      // 2. Tous : Ensemble de l'historique et du futur sans filtre, le scroll automatique gérera la position
     }
 
     devoirsFiltres.sort((a, b) => {
@@ -765,7 +851,6 @@
       const aujourdhuiKey = new Date().toISOString().split('T')[0];
       const estEnRetard = !estFait && dateKey && dateKey < aujourdhuiKey;
 
-      // Pour la vue "Tous", identification de la première échéance future non réalisée (>= aujourd'hui) pour le scroll automatique
       if (vueActuelle === 'tous' && !idCibleAAncre && !estFait && dateObj) {
         let dateD = new Date(dateObj);
         dateD.setHours(0, 0, 0, 0);
@@ -813,14 +898,11 @@
 
     container.innerHTML = html;
 
-    // Positionnement automatique par défilement (scroll) sur le devoir le plus proche dans le futur (vue "Tous")
     if (vueActuelle === 'tous') {
       setTimeout(() => {
         if (idCibleAAncre) {
           const el = document.getElementById(idCibleAAncre);
-          if (el) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
       }, 150);
     }
@@ -838,8 +920,10 @@
     const nbDevoirsTotal = devoirsFiltres.length;
     const nbDevoirsFaits = devoirsFiltres.filter(d => d.Statut === 'FAIT' || d.Statut === 'ANNULE' || d.Statut === 'TERMINE').length;
 
-    if (nbDevoirsTotal === 0) {
-      container.innerHTML = '';
+    let htmlProfil = afficherProfilEnfant(enfantSelectionne);
+
+    if (nbDevoirsTotal === 0 && enfantSelectionne === 'TOUS') {
+      container.innerHTML = htmlProfil;
       return;
     }
 
@@ -847,9 +931,10 @@
 
     let labelVue = "Aujourd'hui";
     if (vueActuelle === 'semaine') labelVue = "À venir";
-    if (vueActuelle === 'tous') labelVue = "Tous (Historique et futur)";
+    if (vueActuelle === 'tous') labelVue = "Tous";
 
     container.innerHTML = `
+      ${htmlProfil}
       <div class="charge-card">
         <div>
           <div class="charge-number">${faitsMin} / ${totalMin} min</div>
@@ -883,40 +968,54 @@
   }
 
   // =====================================================
-  // ACTIONS DEVOIRS (COCHAGE, FORMULAIRE, SUPPRESSION)
+  // ACTIONS DEVOIRS (COCHAGE AVEC GAMIFICATION)
   // =====================================================
-// Extrait de la fonction cocherDevoir à mettre à jour dans Index.html
-  callAPI('changerStatut', { idDevoir: idDevoir, nouveauStatut: nouveauStatut })
-    .then(response => {
-      if (!response || !response.success) {
-        afficherErreur(response ? response.error.message : 'Erreur statut');
-        rafraichirDonnees();
-      } else {
-        // --- ÉTAPE 3 : GESTION VISUELLE DE LA GAMIFICATION ---
-        if (response.data && response.data.gamification) {
-          const gami = response.data.gamification;
-          console.log("🎮 GAMIFICATION :", gami);
-
-          let messageToast = nouveauStatut === 'FAIT' 
-            ? `🎉 Devoir validé ! +${gami.xpGagnes} XP` 
-            : 'Devoir remis à faire';
-
-          // Si on a des raisons détaillées (ex: bonus d'avance, type de devoir)
-          if (gami.raisonsXP && gami.raisonsXP.length > 0) {
-            messageToast += ` (${gami.raisonsXP.join(', ')} )`;
-          }
-
-          // Si l'enfant monte de niveau, on fait une annonce festive !
-          if (gami.levelUp) {
-            alert(`⭐ NIVEAU SUPÉRIEUR ! ⭐\n\nBravo ! Passage au niveau ${gami.niveau} : "${gami.titre}" ! 🚀`);
-          }
-
-          afficherToast(messageToast);
+  function cocherDevoir(idDevoir, statutActuel) {
+    const nouveauStatut = (statutActuel === 'FAIT' || statutActuel === 'TERMINE') ? 'A_FAIRE' : 'FAIT';
+    
+    callAPI('changerStatut', { idDevoir: idDevoir, nouveauStatut: nouveauStatut })
+      .then(response => {
+        if (!response || !response.success) {
+          afficherErreur(response ? response.error.message : 'Erreur statut');
+          rafraichirDonnees();
         } else {
-          afficherToast(nouveauStatut === 'FAIT' ? 'Devoir marqué comme fait ! 🎉' : 'Devoir remis à faire');
+          if (response.data && response.data.gamification) {
+            const gami = response.data.gamification;
+
+            // Mise à jour locale du profil pour l'affichage immédiat
+            let profilLocal = profils.find(x => String(x.ID_Enfant) === String(enfantSelectionne));
+            if (profilLocal) {
+              profilLocal.XP_Total = gami.nouveauXPTotal;
+              profilLocal.Niveau_Actuel = gami.niveau;
+              profilLocal.Titre_Actuel = gami.titre;
+              profilLocal.Serie_Actuelle = gami.serieActuelle;
+              profilLocal.Serie_Record = gami.serieRecord;
+            }
+
+            let messageToast = nouveauStatut === 'FAIT' 
+              ? `🎉 Devoir validé ! +${gami.xpGagnes} XP` 
+              : 'Devoir remis à faire';
+
+            if (gami.raisonsXP && gami.raisonsXP.length > 0) {
+              messageToast += ` (${gami.raisonsXP.join(', ')})`;
+            }
+
+            if (gami.levelUp) {
+              alert(`⭐ NIVEAU SUPÉRIEUR ! ⭐\n\nBravo ! Passage au niveau ${gami.niveau} : "${gami.titre}" ! 🚀`);
+            }
+
+            afficherToast(messageToast);
+          } else {
+            afficherToast(nouveauStatut === 'FAIT' ? 'Devoir marqué comme fait ! 🎉' : 'Devoir remis à faire');
+          }
+          rafraichirDonnees();
         }
-      }
-    })
+      })
+      .catch(err => {
+        afficherErreur(err);
+        rafraichirDonnees();
+      });
+  }
 
   function ouvrirFormulaire(idDevoir) {
     const modal = document.getElementById('modalDevoir');
@@ -1125,7 +1224,6 @@
       .replace(/'/g, '&#039;');
   }
 
-  // Fermer les menus contextuels lors d'un clic ailleurs
   document.addEventListener('click', function(e) {
     if (!e.target.closest('.devoir-menu') && !e.target.closest('.devoir-actions')) {
       document.querySelectorAll('.devoir-actions').forEach(el => el.classList.add('hidden'));
