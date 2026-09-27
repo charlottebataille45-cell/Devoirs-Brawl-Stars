@@ -846,7 +846,7 @@
   // =====================================================
   // BOUTIQUE DE RÉCOMPENSES XP
   // =====================================================
-  function afficherBoutique() {
+function afficherBoutique() {
     const container = document.getElementById('contenu');
 
     if (enfantSelectionne === 'TOUS') {
@@ -855,12 +855,85 @@
           <div style="font-size: 48px; margin-bottom: 15px;">🎁</div>
           <h2 style="color: #ffd700; margin-bottom: 10px; font-weight: 900;">Boutique XP</h2>
           <p style="color: var(--muted); font-weight: 800; font-size: 15px; line-height: 1.4;">
-            Choisis ton prénom en haut pour voir tes points XP et débloquer tes récompenses ! 🚀
+            Choisis ton prénom en haut pour voir ton épargne XP et débloquer tes récompenses ! 🚀
           </p>
         </div>
       `;
       return;
     }
+
+    let p = profils.find(x => String(x.ID_Enfant) === String(enfantSelectionne)) || {
+      XP_Totale: 0,
+      XP_Disponibles: 0,
+      Badges: 0,
+      Niveau_Actuel: 1,
+      Titre_Actuel: "Débutant"
+    };
+
+    // Gestion des noms de propriétés (compatibilité)
+    let xpTotale = p.XP_Totale !== undefined ? p.XP_Totale : (p.XP_Total || 0);
+    let xpDispo = p.XP_Disponibles !== undefined ? p.XP_Disponibles : (p.XP_Dispo !== undefined ? p.XP_Dispo : xpTotale);
+    let nbBadges = p.Badges || 0;
+
+    // Trouver le prochain objectif (le premier article non encore achetable ou le plus cher)
+    let prochainObjectif = catalogueRecompenses.find(item => item.cout > xpDispo) || catalogueRecompenses[catalogueRecompenses.length - 1];
+    let pourcentageObj = Math.min(100, Math.round((xpDispo / prochainObjectif.cout) * 100));
+    let resteXP = Math.max(0, prochainObjectif.cout - xpDispo);
+
+    let headerBoutique = `
+      <div class="profil-card" style="margin-bottom: 20px;">
+        <div class="profil-header" style="margin-bottom: 8px;">
+          <div>
+            <span class="brawl-level-badge">BOUTIQUE & ÉPARGNE</span>
+            <div class="profil-titre-niveau" style="margin-top: 4px;">🎯 Ton Épargne XP</div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 12px; color: #ffd700; font-weight: 900;">⭐ Total : ${xpTotale} XP</div>
+            <div style="font-size: 11px; color: #cbd5e1; font-weight: 800;">🏆 ${nbBadges} Badge(s)</div>
+          </div>
+        </div>
+
+        <div style="background: rgba(0,0,0,0.45); border: 3px solid #324796; border-radius: 14px; padding: 12px; margin-top: 10px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <span style="font-size: 14px; font-weight: 900; color: #ffd700;">💰 ${xpDispo} XP disponibles</span>
+            <span style="font-size: 11px; font-weight: 800; color: #94a3b8;">${pourcentageObj}%</span>
+          </div>
+          <div style="font-size: 12px; color: #fff; font-weight: 800; margin-bottom: 8px;">
+            Objectif : ${prochainObjectif.icone} ${prochainObjectif.titre} (${prochainObjectif.cout} XP)
+          </div>
+          <div class="progress" style="margin-top: 0; margin-bottom: 6px;">
+            <div class="progress-bar" style="width: ${pourcentageObj}%;"></div>
+          </div>
+          <div style="font-size: 11px; color: #cbd5e1; font-weight: 800; text-align: right;">
+            ${resteXP > 0 ? `Encore ${resteXP} XP pour l'atteindre !` : 'Objectif atteint ! Tu peux l\'acheter ! 🎉'}
+          </div>
+        </div>
+      </div>
+    `;
+
+    let itemsHTML = catalogueRecompenses.map(item => {
+      const peutAcheter = xpDispo >= item.cout;
+      return `
+        <div class="shop-card">
+          <div class="shop-item-top">
+            <div class="shop-icon">${item.icone}</div>
+            <div class="shop-info">
+              <div class="shop-title">${echapperHTML(item.titre)}</div>
+              <div class="shop-desc">${echapperHTML(item.desc)}</div>
+            </div>
+          </div>
+          <div class="shop-footer">
+            <div class="shop-price">⭐ ${item.cout} XP</div>
+            <button class="btn-buy" ${peutAcheter ? '' : 'disabled'} onclick="acheterRecompense(${item.cout}, '${echapperHTML(item.titre)}')">
+              ${peutAcheter ? 'ÉCHANGER' : 'XP insuffisants'}
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    container.innerHTML = headerBoutique + itemsHTML;
+  }
 
     let p = profils.find(x => String(x.ID_Enfant) === String(enfantSelectionne)) || {
       XP_Total: 0,
@@ -906,15 +979,27 @@
     container.innerHTML = headerBoutique + itemsHTML;
   }
 
-  function acheterRecompense(cout, titreRecompense) {
+function acheterRecompense(cout, titreRecompense) {
     let p = profils.find(x => String(x.ID_Enfant) === String(enfantSelectionne));
-    if (!p || p.XP_Total < cout) {
-      afficherToast("⚠️ Tu n'as pas assez d'XP !");
+    if (!p) return;
+
+    let xpDispo = p.XP_Disponibles !== undefined ? p.XP_Disponibles : (p.XP_Dispo !== undefined ? p.XP_Dispo : (p.XP_Totale || p.XP_Total || 0));
+
+    if (xpDispo < cout) {
+      afficherToast("⚠️ Tu n'as pas assez d'XP disponibles !");
       return;
     }
 
-    if (confirm(`Veux-tu vraiment échanger ${cout} XP contre : "${titreRecompense}" ?`)) {
-      p.XP_Total -= cout;
+    if (confirm(`Veux-tu vraiment échanger ${cout} XP de ton épargne contre : "${titreRecompense}" ?`)) {
+      // On déduit uniquement de l'XP disponible (l'XP totale et le niveau ne bougent pas)
+      if (p.XP_Disponibles !== undefined) {
+        p.XP_Disponibles -= cout;
+      } else if (p.XP_Dispo !== undefined) {
+        p.XP_Dispo -= cout;
+      } else {
+        p.XP_Disponibles = xpDispo - cout;
+      }
+
       afficherToast(`🎉 Récompense débloquée : "${titreRecompense}" ! Bon courage aux parents pour la valider ! 🏆`);
       afficherBoutique();
     }
@@ -1131,11 +1216,15 @@
 
             let profilLocal = profils.find(x => String(x.ID_Enfant) === String(enfantSelectionne));
             if (profilLocal) {
-              profilLocal.XP_Total = gami.nouveauXPTotal;
+              profilLocal.XP_Totale = gami.nouveauXPTotal;
+              // Si la base ne renvoie pas encore XP_Disponibles, on incrémente l'existant
+              if (profilLocal.XP_Disponibles !== undefined) {
+                profilLocal.XP_Disponibles += gami.xpGagnes;
+              } else {
+                profilLocal.XP_Disponibles = (profilLocal.XP_Disponibles || gami.nouveauXPTotal);
+              }
               profilLocal.Niveau_Actuel = gami.niveau;
               profilLocal.Titre_Actuel = gami.titre;
-              profilLocal.Serie_Actuelle = gami.serieActuelle;
-              profilLocal.Serie_Record = gami.serieRecord;
             }
 
             let messageToast = nouveauStatut === 'FAIT' 
