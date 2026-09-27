@@ -614,7 +614,7 @@
   let priorites = [];
   let statuts = [];
   let types = [];
-  let profils = []; // 👈 Stockage local des profils de gamification
+  let profils = [];
 
   let vueActuelle = 'aujourdhui';
   let enfantSelectionne = 'TOUS';
@@ -677,7 +677,7 @@
         statuts = response.data.statuts || [];
         priorites = response.data.priorites || [];
         types = response.data.types || [];
-        profils = response.data.profils || []; // 👈 Chargement des profils
+        profils = response.data.profils || [];
 
         genererFiltreEnfants();
         remplirListesDeroulantes();
@@ -736,7 +736,7 @@
   }
 
   // =====================================================
-  // AFFICHAGE DU PROFIL DE GAMIFICATION
+  // AFFICHAGE DU PROFIL DE GAMIFICATION & STATS MATIERES
   // =====================================================
   function afficherProfilEnfant(idEnfant) {
     if (idEnfant === 'TOUS') return '';
@@ -748,6 +748,21 @@
       Serie_Actuelle: 0,
       Serie_Record: 0
     };
+
+    // Calcul des statistiques par matière pour l'enfant sélectionné
+    const devoirsEnfant = devoirs.filter(d => String(d.ID_Enfant) === String(idEnfant) && (d.Statut === 'FAIT' || d.Statut === 'TERMINE'));
+    let statsMatieres = {};
+    devoirsEnfant.forEach(d => {
+      let nomMat = getNomMatiere(d.ID_Matiere);
+      statsMatieres[nomMat] = (statsMatieres[nomMat] || 0) + Number(d.Duree_Estimee_Min || 0);
+    });
+
+    let htmlMatieres = Object.keys(statsMatieres).map(mat => `
+      <div style="display: flex; justify-content: space-between; font-size: 13px; padding: 5px 0; border-bottom: 1px dashed rgba(255,255,255,.2);">
+        <span>📚 ${echapperHTML(mat)}</span>
+        <span style="font-weight: 900;">${statsMatieres[mat]} min</span>
+      </div>
+    `).join('') || '<div style="font-size: 13px; opacity: 0.8;">Aucun devoir validé pour l\'instant.</div>';
 
     return `
       <div class="profil-card">
@@ -770,6 +785,11 @@
             <div class="profil-stat-label">Record de série</div>
           </div>
         </div>
+      </div>
+
+      <div class="profil-card" style="background: linear-gradient(135deg, #1b2a52 0%, #2945c9 100%); margin-top: -8px;">
+        <div style="font-size: 14px; font-weight: 900; margin-bottom: 8px; color: var(--yellow);">📊 Temps validé par matière</div>
+        ${htmlMatieres}
       </div>
     `;
   }
@@ -970,8 +990,7 @@
   // =====================================================
   // ACTIONS DEVOIRS (COCHAGE AVEC GAMIFICATION)
   // =====================================================
-function cocherDevoir(idDevoir, statutActuel) {
-    // Si le devoir est déjà fait ou terminé, on le remet à 'A_FAIRE'. Sinon, on le passe à 'FAIT'.
+  function cocherDevoir(idDevoir, statutActuel) {
     const estDejaFait = (statutActuel === 'FAIT' || statutActuel === 'TERMINE' || statutActuel === 'ANNULE');
     const nouveauStatut = estDejaFait ? 'A_FAIRE' : 'FAIT';
     
@@ -984,7 +1003,6 @@ function cocherDevoir(idDevoir, statutActuel) {
           if (response.data && response.data.gamification) {
             const gami = response.data.gamification;
 
-            // Mise à jour locale du profil pour l'affichage immédiat
             let profilLocal = profils.find(x => String(x.ID_Enfant) === String(enfantSelectionne));
             if (profilLocal) {
               profilLocal.XP_Total = gami.nouveauXPTotal;
