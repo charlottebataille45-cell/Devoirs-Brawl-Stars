@@ -885,39 +885,38 @@
   // =====================================================
   // ACTIONS DEVOIRS (COCHAGE, FORMULAIRE, SUPPRESSION)
   // =====================================================
-  function cocherDevoir(idDevoir, statutActuel) {
-    const estFait = (statutActuel === 'FAIT' || statutActuel === 'TERMINE');
-    const nouveauStatut = estFait ? 'A_FAIRE' : 'FAIT';
+// Extrait de la fonction cocherDevoir à mettre à jour dans Index.html
+  callAPI('changerStatut', { idDevoir: idDevoir, nouveauStatut: nouveauStatut })
+    .then(response => {
+      if (!response || !response.success) {
+        afficherErreur(response ? response.error.message : 'Erreur statut');
+        rafraichirDonnees();
+      } else {
+        // --- ÉTAPE 3 : GESTION VISUELLE DE LA GAMIFICATION ---
+        if (response.data && response.data.gamification) {
+          const gami = response.data.gamification;
+          console.log("🎮 GAMIFICATION :", gami);
 
-    const d = devoirs.find(x => String(x.ID_Devoir) === String(idDevoir));
-    if (d) {
-      d.Statut = nouveauStatut;
-      afficherDevoirs();
-    }
+          let messageToast = nouveauStatut === 'FAIT' 
+            ? `🎉 Devoir validé ! +${gami.xpGagnes} XP` 
+            : 'Devoir remis à faire';
 
-    callAPI('changerStatut', { idDevoir: idDevoir, nouveauStatut: nouveauStatut })
-      .then(response => {
-        if (!response || !response.success) {
-          afficherErreur(response ? response.error.message : 'Erreur statut');
-          rafraichirDonnees();
-        } else {
-          // --- NOUVEAU CODE : Vérification silencieuse Gamification ---
-          if (response.data && response.data.gamification) {
-            console.log("🎮 GAMIFICATION DÉTECTÉE :", response.data.gamification);
-            if (response.data.gamification.levelUp) {
-              console.log("⭐ LEVEL UP ! Niveau " + response.data.gamification.niveau);
-            }
+          // Si on a des raisons détaillées (ex: bonus d'avance, type de devoir)
+          if (gami.raisonsXP && gami.raisonsXP.length > 0) {
+            messageToast += ` (${gami.raisonsXP.join(', ')} )`;
           }
-          // ------------------------------------------------------------
-          
+
+          // Si l'enfant monte de niveau, on fait une annonce festive !
+          if (gami.levelUp) {
+            alert(`⭐ NIVEAU SUPÉRIEUR ! ⭐\n\nBravo ! Passage au niveau ${gami.niveau} : "${gami.titre}" ! 🚀`);
+          }
+
+          afficherToast(messageToast);
+        } else {
           afficherToast(nouveauStatut === 'FAIT' ? 'Devoir marqué comme fait ! 🎉' : 'Devoir remis à faire');
         }
-      })
-      .catch(err => {
-        afficherErreur(err);
-        rafraichirDonnees();
-      });
-  }
+      }
+    })
 
   function ouvrirFormulaire(idDevoir) {
     const modal = document.getElementById('modalDevoir');
