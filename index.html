@@ -434,18 +434,19 @@
       <span aria-hidden="true">+</span>
     </button>
 
+    <!-- Navigation Ordre Corrigé : 1. Aujourd'hui | 2. Tous | 3. À venir -->
     <nav class="tabs-bottom" aria-label="Navigation principale">
       <button id="tabAujourdHui" class="tab active" type="button" onclick="changerVue('aujourdhui')">
         <span class="tab-icon">🎯</span>
         <span class="tab-label">Aujourd’hui</span>
       </button>
-      <button id="tabSemaine" class="tab" type="button" onclick="changerVue('semaine')">
-        <span class="tab-icon">🚀</span>
-        <span class="tab-label">À venir</span>
-      </button>
       <button id="tabTous" class="tab" type="button" onclick="changerVue('tous')">
         <span class="tab-icon">🏆</span>
         <span class="tab-label">Tous</span>
+      </button>
+      <button id="tabSemaine" class="tab" type="button" onclick="changerVue('semaine')">
+        <span class="tab-icon">🚀</span>
+        <span class="tab-label">À venir</span>
       </button>
     </nav>
   </div>
@@ -676,8 +677,8 @@
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     
     if (vue === 'aujourdhui') document.getElementById('tabAujourdHui').classList.add('active');
-    if (vue === 'semaine') document.getElementById('tabSemaine').classList.add('active');
     if (vue === 'tous') document.getElementById('tabTous').classList.add('active');
+    if (vue === 'semaine') document.getElementById('tabSemaine').classList.add('active');
     
     afficherDevoirs();
   }
@@ -704,20 +705,46 @@
     aujourdhui.setHours(0, 0, 0, 0);
     
     if (vueActuelle === 'aujourdhui') {
+      // Vue "Aujourd'hui" : ceux du jour + retards non faits
       devoirsFiltres = devoirsFiltres.filter(d => {
         if (!d.Date_Echeance) return false;
         let dateD = new Date(d.Date_Echeance);
         dateD.setHours(0, 0, 0, 0);
-        return dateD.getTime() <= aujourdhui.getTime();
+        const estFait = (d.Statut === 'FAIT' || d.Statut === 'TERMINE');
+
+        if (dateD.getTime() === aujourdhui.getTime()) return true;
+        if (dateD.getTime() < aujourdhui.getTime()) return !estFait;
+        return false;
       });
     } else if (vueActuelle === 'semaine') { 
+      // Vue "À venir" : tous les devoirs futurs
       devoirsFiltres = devoirsFiltres.filter(d => {
-        if (d.Statut === 'FAIT' || d.Statut === 'TERMINE') return false;
         if (!d.Date_Echeance) return false;
         let dateD = new Date(d.Date_Echeance);
         dateD.setHours(0, 0, 0, 0);
         return dateD.getTime() > aujourdhui.getTime();
       });
+    } else if (vueActuelle === 'tous') {
+      // Vue "Tous" : filtrée sur la période future la plus proche
+      const datesFutures = devoirsFiltres
+        .map(d => {
+          if (!d.Date_Echeance) return null;
+          let dt = new Date(d.Date_Echeance);
+          dt.setHours(0, 0, 0, 0);
+          return dt;
+        })
+        .filter(dt => dt && dt.getTime() >= aujourdhui.getTime())
+        .sort((a, b) => a.getTime() - b.getTime());
+
+      if (datesFutures.length > 0) {
+        const minFutureTime = datesFutures[0].getTime();
+        devoirsFiltres = devoirsFiltres.filter(d => {
+          if (!d.Date_Echeance) return false;
+          let dateD = new Date(d.Date_Echeance);
+          dateD.setHours(0, 0, 0, 0);
+          return dateD.getTime() === minFutureTime;
+        });
+      }
     }
 
     devoirsFiltres.sort((a, b) => {
@@ -797,6 +824,44 @@
     container.innerHTML = html;
   }
 
+  function calculerCharge(devoirsFiltres) {
+    const container = document.getElementById('chargeContainer');
+    if (!container) return;
+
+    const totalMin = devoirsFiltres.reduce((sum, d) => sum + Number(d.Duree_Estimee_Min || 0), 0);
+    const faitsMin = devoirsFiltres
+      .filter(d => d.Statut === 'FAIT' || d.Statut === 'TERMINE')
+      .reduce((sum, d) => sum + Number(d.Duree_Estimee_Min || 0), 0);
+
+    const nbDevoirsTotal = devoirsFiltres.length;
+    const nbDevoirsFaits = devoirsFiltres.filter(d => d.Statut === 'FAIT' || d.Statut === 'TERMINE').length;
+
+    if (nbDevoirsTotal === 0) {
+      container.innerHTML = '';
+      return;
+    }
+
+    const pourcentage = totalMin > 0 ? Math.round((faitsMin / totalMin) * 100) : 0;
+
+    let labelVue = "Aujourd'hui";
+    if (vueActuelle === 'semaine') labelVue = "À venir";
+    if (vueActuelle === 'tous') labelVue = "Prochaine échéance";
+
+    container.innerHTML = `
+      <div class="charge-card">
+        <div>
+          <div class="charge-number">${faitsMin} / ${totalMin} min</div>
+        </div>
+        <div class="charge-detail">
+          ${nbDevoirsFaits} sur ${nbDevoirsTotal} devoir(s) terminé(s) (${labelVue})
+        </div>
+        <div class="progress">
+          <div class="progress-bar" style="width: ${pourcentage}%;"></div>
+        </div>
+      </div>
+    `;
+  }
+
   function toggleMenuDevoir(button) {
     const card = button.closest('.devoir');
     if (!card) return;
@@ -806,12 +871,8 @@
 
     const ouvert = !menu.classList.contains('hidden');
 
-    document.querySelectorAll('.devoir-actions').forEach(el => {
-      el.classList.add('hidden');
-    });
-    document.querySelectorAll('.devoir-menu').forEach(el => {
-      el.setAttribute('aria-expanded', 'false');
-    });
+    document.querySelectorAll('.devoir-actions').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('.devoir-menu').forEach(el => el.setAttribute('aria-expanded', 'false'));
 
     if (!ouvert) {
       menu.classList.remove('hidden');
@@ -819,261 +880,248 @@
     }
   }
 
-  document.addEventListener('click', function(event) {
-    if (!event.target.closest('.devoir')) {
-      document.querySelectorAll('.devoir-actions').forEach(el => el.classList.add('hidden'));
-      document.querySelectorAll('.devoir-menu').forEach(el => el.setAttribute('aria-expanded', 'false'));
-    }
-  });
+  // =====================================================
+  // ACTIONS DEVOIRS (COCHAGE, FORMULAIRE, SUPPRESSION)
+  // =====================================================
+  function cocherDevoir(idDevoir, statutActuel) {
+    const estFait = (statutActuel === 'FAIT' || statutActuel === 'TERMINE');
+    const nouveauStatut = estFait ? 'A_FAIRE' : 'FAIT';
 
-  function toggleOptionsAvancees() {
-    const fields = document.getElementById('advancedFields');
-    const toggle = document.getElementById('advancedToggle');
-    const chevron = document.getElementById('advancedChevron');
-    if (!fields || !toggle) return;
-
-    const ouvert = fields.classList.contains('hidden');
-    fields.classList.toggle('hidden', !ouvert);
-    toggle.setAttribute('aria-expanded', ouvert ? 'true' : 'false');
-    if (chevron) chevron.textContent = ouvert ? '⌃' : '⌄';
-  }
-
-  function resetOptionsAvancees() {
-    const fields = document.getElementById('advancedFields');
-    const toggle = document.getElementById('advancedToggle');
-    const chevron = document.getElementById('advancedChevron');
-
-    if (fields) fields.classList.add('hidden');
-    if (toggle) toggle.setAttribute('aria-expanded', 'false');
-    if (chevron) chevron.textContent = '⌄';
-  }
-
-  function calculerCharge(devoirsAffiches) {
-    const chargeContainer = document.getElementById('chargeContainer');
-    const devoirsRestants = devoirsAffiches.filter(d => d.Statut !== 'FAIT' && d.Statut !== 'TERMINE' && d.Statut !== 'ANNULE');
-    
-    if (devoirsRestants.length === 0 && devoirsAffiches.length === 0) {
-      chargeContainer.innerHTML = '';
-      return;
+    const d = devoirs.find(x => String(x.ID_Devoir) === String(idDevoir));
+    if (d) {
+      d.Statut = nouveauStatut;
+      afficherDevoirs();
     }
 
-    let tempsTotal = 0;
-    devoirsRestants.forEach(d => tempsTotal += parseInt(d.Duree_Estimee_Min) || 0);
-
-    let heures = Math.floor(tempsTotal / 60);
-    let minutes = tempsTotal % 60;
-    let tempsStr = heures > 0 ? `${heures}h${minutes > 0 ? minutes : ''}` : `${minutes} min`;
-
-    let total = devoirsAffiches.length;
-    let faits = total - devoirsRestants.length;
-    let pourcentage = total === 0 ? 0 : Math.round((faits / total) * 100);
-
-    chargeContainer.innerHTML = `
-      <div class="charge-card">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <div>
-            <div class="charge-number">${tempsStr}</div>
-            <div class="charge-detail">de travail restant (${devoirsRestants.length} tâche${devoirsRestants.length > 1 ? 's' : ''})</div>
-          </div>
-          <div style="font-size:24px;">${pourcentage === 100 ? '🎉' : '💪'}</div>
-        </div>
-        <div class="progress">
-          <div class="progress-bar" style="width: ${pourcentage}%"></div>
-        </div>
-      </div>
-    `;
+    callAPI('changerStatut', { idDevoir: idDevoir, nouveauStatut: nouveauStatut })
+      .then(response => {
+        if (!response || !response.success) {
+          afficherErreur(response ? response.error.message : 'Erreur statut');
+          rafraichirDonnees();
+        } else {
+          afficherToast(nouveauStatut === 'FAIT' ? 'Devoir marqué comme fait ! 🎉' : 'Devoir remis à faire');
+        }
+      })
+      .catch(err => {
+        afficherErreur(err);
+        rafraichirDonnees();
+      });
   }
 
-  // =====================================================
-  // GESTION DU FORMULAIRE (Modale)
-  // =====================================================
-  function getValeurId(obj, fallbackField) {
-    if (typeof obj === 'string') return obj;
-    return obj.ID_Enfant || obj.ID_Matiere || obj.Code || obj.ID_Statut || obj.ID_Priorite || obj.ID_Type || obj[fallbackField] || obj;
-  }
-  function getValeurLabel(obj) {
-    if (typeof obj === 'string') return obj;
-    return obj.Prenom || obj.Nom || obj.Libelle || obj.Code || obj;
-  }
+  function ouvrirFormulaire(idDevoir) {
+    const modal = document.getElementById('modalDevoir');
+    const form = document.getElementById('formDevoir');
+    const titreModal = document.getElementById('modalTitre');
+    const errDiv = document.getElementById('formErreur');
 
-  function remplirListesDeroulantes() {
-    document.getElementById('formEnfant').innerHTML = enfants.map(e => `<option value="${getValeurId(e)}">${getValeurLabel(e)}</option>`).join('');
-    document.getElementById('formMatiere').innerHTML = matieres.map(m => `<option value="${getValeurId(m)}">${getValeurLabel(m)}</option>`).join('');
-    document.getElementById('formPriorite').innerHTML = priorites.map(p => `<option value="${getValeurId(p)}">${getValeurLabel(p)}</option>`).join('');
-    document.getElementById('formStatut').innerHTML = statuts.map(s => `<option value="${getValeurId(s)}">${getValeurLabel(s)}</option>`).join('');
-    document.getElementById('formType').innerHTML = types.map(t => `<option value="${getValeurId(t)}">${getValeurLabel(t)}</option>`).join('');
-  }
+    errDiv.classList.add('hidden');
+    errDiv.innerText = '';
+    form.reset();
 
-  function ouvrirFormulaire() {
-    document.getElementById('formIdDevoir').value = '';
-    document.getElementById('formTitre').value = '';
-    document.getElementById('formDescription').value = '';
-    document.getElementById('formDate').value = new Date().toISOString().split('T')[0];
-    document.getElementById('formDuree').value = 20;
-    document.getElementById('formEtape').value = '';
-    document.getElementById('formNbEtapes').value = '';
-    document.getElementById('formStatut').value = 'A_FAIRE';
-    
-    document.getElementById('modalTitre').innerText = 'Ajouter un devoir';
-    document.getElementById('modalDevoir').classList.remove('hidden');
+    document.getElementById('advancedFields').classList.add('hidden');
+    document.getElementById('advancedToggle').setAttribute('aria-expanded', 'false');
+
+    if (idDevoir) {
+      const d = devoirs.find(x => String(x.ID_Devoir) === String(idDevoir));
+      if (d) {
+        titreModal.innerText = 'Modifier le devoir';
+        document.getElementById('formIdDevoir').value = d.ID_Devoir;
+        document.getElementById('formEnfant').value = d.ID_Enfant || '';
+        document.getElementById('formMatiere').value = d.ID_Matiere || '';
+        document.getElementById('formTitre').value = d.Titre || '';
+        
+        let dateVal = '';
+        if (d.Date_Echeance) {
+          const dt = new Date(d.Date_Echeance);
+          dateVal = !isNaN(dt.getTime()) ? dt.toISOString().split('T')[0] : d.Date_Echeance;
+        }
+        document.getElementById('formDate').value = dateVal;
+        document.getElementById('formDuree').value = d.Duree_Estimee_Min || 20;
+
+        document.getElementById('formDescription').value = d.Description || '';
+        document.getElementById('formType').value = d.Type || 'DEVOIR';
+        document.getElementById('formPriorite').value = d.Priorite || 'NORMALE';
+        document.getElementById('formEtape').value = d.Etape || '';
+        document.getElementById('formNbEtapes').value = d.Nb_Etapes || '';
+        document.getElementById('formStatut').value = d.Statut || 'A_FAIRE';
+
+        if (d.Description || d.Etape || d.Nb_Etapes || d.Priorite === 'HAUTE' || d.Priorite === 'URGENTE') {
+          document.getElementById('advancedFields').classList.remove('hidden');
+          document.getElementById('advancedToggle').setAttribute('aria-expanded', 'true');
+        }
+      }
+    } else {
+      titreModal.innerText = 'Ajouter un devoir';
+      document.getElementById('formIdDevoir').value = '';
+      
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('formDate').value = today;
+
+      if (enfantSelectionne !== 'TOUS') {
+        document.getElementById('formEnfant').value = enfantSelectionne;
+      }
+    }
+
+    modal.classList.remove('hidden');
     document.body.classList.add('modal-open');
-    setTimeout(() => document.getElementById('formTitre').focus(), 250);
+  }
+
+  function editerDevoir(idDevoir) {
+    ouvrirFormulaire(idDevoir);
   }
 
   function fermerFormulaire() {
-    document.getElementById('modalDevoir').classList.add('hidden');
+    const modal = document.getElementById('modalDevoir');
+    modal.classList.add('hidden');
     document.body.classList.remove('modal-open');
   }
 
-  function editerDevoir(id) {
-    const devoir = devoirs.find(d => d.ID_Devoir == id);
-    if(!devoir) return;
+  function toggleOptionsAvancees() {
+    const fields = document.getElementById('advancedFields');
+    const toggleBtn = document.getElementById('advancedToggle');
+    const cache = fields.classList.contains('hidden');
 
-    document.getElementById('formIdDevoir').value = devoir.ID_Devoir || '';
-    document.getElementById('formEnfant').value = devoir.ID_Enfant || '';
-    document.getElementById('formMatiere').value = devoir.ID_Matiere || '';
-    document.getElementById('formTitre').value = devoir.Titre || '';
-    document.getElementById('formDescription').value = devoir.Description || '';
-    document.getElementById('formType').value = devoir.Type || '';
-    
-    if(devoir.Date_Echeance) {
-      let d = new Date(devoir.Date_Echeance);
-      document.getElementById('formDate').value = d.toISOString().split('T')[0];
+    if (cache) {
+      fields.classList.remove('hidden');
+      toggleBtn.setAttribute('aria-expanded', 'true');
+    } else {
+      fields.classList.add('hidden');
+      toggleBtn.setAttribute('aria-expanded', 'false');
     }
-    
-    document.getElementById('formDuree').value = devoir.Duree_Estimee_Min || 20;
-    document.getElementById('formPriorite').value = devoir.Priorite || 'NORMALE';
-    document.getElementById('formEtape').value = devoir.Etape || '';
-    document.getElementById('formNbEtapes').value = devoir.Nb_Etapes || '';
-    document.getElementById('formStatut').value = devoir.Statut || 'A_FAIRE';
-    resetOptionsAvancees();
-
-    document.getElementById('modalTitre').innerText = 'Modifier un devoir';
-    document.getElementById('modalDevoir').classList.remove('hidden');
   }
 
-  // =====================================================
-  // INTERACTIONS AVEC LE BACKEND (API HTTP)
-  // =====================================================
   function sauvegarderDevoir(event) {
     event.preventDefault();
-    
-    const btn = document.getElementById('btnSauvegarder');
-    btn.disabled = true;
-    btn.innerText = 'Enregistrement...';
+    const btnSave = document.getElementById('btnSauvegarder');
+    const errDiv = document.getElementById('formErreur');
 
-    const dataPayload = {
-      idEnfant: document.getElementById('formEnfant').value,
-      idMatiere: document.getElementById('formMatiere').value,
-      type: document.getElementById('formType').value,
-      titre: document.getElementById('formTitre').value,
-      description: document.getElementById('formDescription').value,
-      dateEcheance: document.getElementById('formDate').value,
-      dureeEstimeeMin: document.getElementById('formDuree').value,
-      priorite: document.getElementById('formPriorite').value,
-      statut: document.getElementById('formStatut').value,
-      etape: document.getElementById('formEtape').value,
-      nbEtapes: document.getElementById('formNbEtapes').value
-    };
+    errDiv.classList.add('hidden');
+    errDiv.innerText = '';
 
     const idDevoir = document.getElementById('formIdDevoir').value;
-    const action = idDevoir ? 'modifierDevoir' : 'ajouterDevoir';
-    const payload = idDevoir ? { idDevoir: idDevoir, data: dataPayload } : { data: dataPayload };
+    const payload = {
+      idEnfant: document.getElementById('formEnfant').value,
+      idMatiere: document.getElementById('formMatiere').value,
+      titre: document.getElementById('formTitre').value.trim(),
+      dateEcheance: document.getElementById('formDate').value,
+      dureeEstimeeMin: Number(document.getElementById('formDuree').value || 0),
+      description: document.getElementById('formDescription').value.trim(),
+      type: document.getElementById('formType').value || 'DEVOIR',
+      priorite: document.getElementById('formPriorite').value || 'NORMALE',
+      etape: document.getElementById('formEtape').value || '',
+      nbEtapes: document.getElementById('formNbEtapes').value || '',
+      statut: document.getElementById('formStatut').value || 'A_FAIRE'
+    };
 
-    callAPI(action, payload)
+    if (!payload.idEnfant || !payload.idMatiere || !payload.titre || !payload.dateEcheance) {
+      errDiv.innerText = 'Veuillez remplir tous les champs obligatoires.';
+      errDiv.classList.remove('hidden');
+      return;
+    }
+
+    btnSave.disabled = true;
+    btnSave.innerText = 'Enregistrement…';
+
+    const action = idDevoir ? 'modifierDevoir' : 'ajouterDevoir';
+    const apiPayload = idDevoir ? { idDevoir: idDevoir, data: payload } : { data: payload };
+
+    callAPI(action, apiPayload)
       .then(response => {
-        btn.disabled = false;
-        btn.innerText = 'Enregistrer';
-        if (!response || !response.success) return afficherErreur(response ? response.error.message : 'Erreur réseau');
-        
-        fermerFormulaire();
-        afficherToast('Devoir enregistré !');
-        chargerDevoirs();
+        btnSave.disabled = false;
+        btnSave.innerText = 'Enregistrer';
+
+        if (!response || !response.success) {
+          const msg = response && response.error ? response.error.message : 'Erreur lors de l’enregistrement';
+          errDiv.innerText = msg;
+          errDiv.classList.remove('hidden');
+        } else {
+          fermerFormulaire();
+          afficherToast(idDevoir ? 'Devoir modifié avec succès !' : 'Devoir ajouté avec succès !');
+          rafraichirDonnees();
+        }
       })
       .catch(err => {
-        btn.disabled = false;
-        btn.innerText = 'Enregistrer';
-        afficherErreur(err);
+        btnSave.disabled = false;
+        btnSave.innerText = 'Enregistrer';
+        errDiv.innerText = String(err);
+        errDiv.classList.remove('hidden');
       });
   }
 
-  function cocherDevoir(id, statutActuel) {
-    const nouveauStatut = (statutActuel === 'FAIT' || statutActuel === 'TERMINE') ? 'A_FAIRE' : 'FAIT';
-    
-    const devoirIndex = devoirs.findIndex(d => d.ID_Devoir === id);
-    if (devoirIndex > -1) {
-      devoirs[devoirIndex].Statut = nouveauStatut;
-      afficherDevoirs(); 
-    }
+  function supprimerDevoirUI(idDevoir) {
+    if (!confirm('Voulez-vous vraiment supprimer ce devoir ?')) return;
 
-    callAPI('changerStatut', { idDevoir: id, nouveauStatut: nouveauStatut })
+    callAPI('supprimerDevoir', { idDevoir: idDevoir })
       .then(response => {
         if (!response || !response.success) {
-          afficherErreur(response ? response.error.message : 'Erreur');
-          return chargerDevoirs(); 
-        }
-        afficherToast(nouveauStatut === 'FAIT' ? 'Bravo ! 👏' : 'Statut mis à jour');
-        chargerDevoirs();
-      })
-      .catch(err => {
-        afficherErreur(err);
-        chargerDevoirs();
-      });
-  }
-
-  function supprimerDevoirUI(id) {
-    if (confirm('Voulez-vous vraiment supprimer ce devoir ?')) {
-      devoirs = devoirs.filter(d => d.ID_Devoir !== id);
-      afficherDevoirs();
-
-      callAPI('supprimerDevoir', { idDevoir: id })
-        .then(response => {
-          if (!response || !response.success) {
-            afficherErreur(response ? response.error.message : 'Erreur suppression');
-            return chargerDevoirs();
-          }
+          afficherErreur(response ? response.error.message : 'Erreur lors de la suppression');
+        } else {
           afficherToast('Devoir supprimé');
-        })
-        .catch(err => {
-          afficherErreur(err);
-          chargerDevoirs();
-        });
-    }
+          rafraichirDonnees();
+        }
+      })
+      .catch(afficherErreur);
   }
 
   // =====================================================
-  // UTILITAIRES
+  // UTILITAIRES INTERFACE ET BINDINGS
   // =====================================================
+  function remplirListesDeroulantes() {
+    const selectEnfant = document.getElementById('formEnfant');
+    selectEnfant.innerHTML = '<option value="">-- Choisir un enfant --</option>' +
+      enfants.map(e => `<option value="${e.ID_Enfant}">${echapperHTML(e.Prenom || e.Nom || e.ID_Enfant)}</option>`).join('');
+
+    const selectMatiere = document.getElementById('formMatiere');
+    selectMatiere.innerHTML = '<option value="">-- Choisir une matière --</option>' +
+      matieres.map(m => `<option value="${m.ID_Matiere || m.Code}">${echapperHTML(m.Matiere || m.Code)}</option>`).join('');
+
+    const selectType = document.getElementById('formType');
+    selectType.innerHTML = types.length > 0
+      ? types.map(t => `<option value="${t.Code || t.Type}">${echapperHTML(t.Libelle || t.Type || t.Code)}</option>`).join('')
+      : '<option value="DEVOIR">Devoir</option><option value="LECON">Leçon</option>';
+
+    const selectPriorite = document.getElementById('formPriorite');
+    selectPriorite.innerHTML = priorites.length > 0
+      ? priorites.map(p => `<option value="${p.Code || p.Priorite}">${echapperHTML(p.Libelle || p.Priorite || p.Code)}</option>`).join('')
+      : '<option value="NORMALE">Normale</option><option value="HAUTE">Haute</option><option value="URGENTE">Urgente</option>';
+
+    const selectStatut = document.getElementById('formStatut');
+    selectStatut.innerHTML = statuts.length > 0
+      ? statuts.map(s => `<option value="${s.Code || s.Statut}">${echapperHTML(s.Libelle || s.Statut || s.Code)}</option>`).join('')
+      : '<option value="A_FAIRE">À faire</option><option value="EN_COURS">En cours</option><option value="FAIT">Fait</option>';
+  }
+
   function afficherToast(message) {
     const toast = document.getElementById('toast');
     toast.innerText = message;
     toast.classList.remove('hidden');
-    setTimeout(() => toast.classList.add('hidden'), 3000);
+    setTimeout(() => {
+      toast.classList.add('hidden');
+    }, 3000);
   }
 
-  function afficherErreur(err) {
-    console.error(err);
-    const message = 'Une erreur est survenue : ' + (err.message || err);
-    const zone = document.getElementById('formErreur');
-
-    if (zone && !document.getElementById('modalDevoir').classList.contains('hidden')) {
-      zone.textContent = message;
-      zone.classList.remove('hidden');
-      return;
-    }
-
-    afficherToast(message);
+  function afficherErreur(erreur) {
+    const msg = typeof erreur === 'object' && erreur.message ? erreur.message : String(erreur);
+    afficherToast('⚠️ ' + msg);
   }
 
   function echapperHTML(str) {
     if (!str) return '';
-    return str.toString()
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
   }
+
+  // Fermer les menus contextuels lors d'un clic ailleurs
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.devoir-menu') && !e.target.closest('.devoir-actions')) {
+      document.querySelectorAll('.devoir-actions').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.devoir-menu').forEach(el => el.setAttribute('aria-expanded', 'false'));
+    }
+  });
   </script>
 </body>
 </html>
