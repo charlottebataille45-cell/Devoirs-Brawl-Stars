@@ -703,48 +703,30 @@
     
     const aujourdhui = new Date();
     aujourdhui.setHours(0, 0, 0, 0);
+
+    // Fonction utilitaire pour vérifier si un devoir est considéré comme terminé / annulé
+    const estFaitOuAnnule = (d) => d.Statut === 'FAIT' || d.Statut === 'ANNULE' || d.Statut === 'TERMINE';
+
+    let idCibleAAncre = null;
     
     if (vueActuelle === 'aujourdhui') {
-      // Vue "Aujourd'hui" : ceux du jour + retards non faits
+      // 1. Aujourd’hui : Uniquement les devoirs à faire (A_FAIRE, EN_COURS, REPORTE, non faits) échéance <= aujourd'hui
       devoirsFiltres = devoirsFiltres.filter(d => {
         if (!d.Date_Echeance) return false;
         let dateD = new Date(d.Date_Echeance);
         dateD.setHours(0, 0, 0, 0);
-        const estFait = (d.Statut === 'FAIT' || d.Statut === 'TERMINE');
-
-        if (dateD.getTime() === aujourdhui.getTime()) return true;
-        if (dateD.getTime() < aujourdhui.getTime()) return !estFait;
-        return false;
+        return !estFaitOuAnnule(d) && dateD.getTime() <= aujourdhui.getTime();
       });
     } else if (vueActuelle === 'semaine') { 
-      // Vue "À venir" : tous les devoirs futurs
+      // 3. À venir : Devoirs à faire dont la date est supérieure ou égale à aujourd'hui
       devoirsFiltres = devoirsFiltres.filter(d => {
         if (!d.Date_Echeance) return false;
         let dateD = new Date(d.Date_Echeance);
         dateD.setHours(0, 0, 0, 0);
-        return dateD.getTime() > aujourdhui.getTime();
+        return !estFaitOuAnnule(d) && dateD.getTime() >= aujourdhui.getTime();
       });
     } else if (vueActuelle === 'tous') {
-      // Vue "Tous" : filtrée sur la période future la plus proche
-      const datesFutures = devoirsFiltres
-        .map(d => {
-          if (!d.Date_Echeance) return null;
-          let dt = new Date(d.Date_Echeance);
-          dt.setHours(0, 0, 0, 0);
-          return dt;
-        })
-        .filter(dt => dt && dt.getTime() >= aujourdhui.getTime())
-        .sort((a, b) => a.getTime() - b.getTime());
-
-      if (datesFutures.length > 0) {
-        const minFutureTime = datesFutures[0].getTime();
-        devoirsFiltres = devoirsFiltres.filter(d => {
-          if (!d.Date_Echeance) return false;
-          let dateD = new Date(d.Date_Echeance);
-          dateD.setHours(0, 0, 0, 0);
-          return dateD.getTime() === minFutureTime;
-        });
-      }
+      // 2. Tous : Ensemble de l'historique et du futur sans filtre, le scroll automatique gérera la position
     }
 
     devoirsFiltres.sort((a, b) => {
@@ -772,7 +754,7 @@
         currentGroup = dateStr;
       }
 
-      const estFait = (d.Statut === 'FAIT' || d.Statut === 'TERMINE');
+      const estFait = estFaitOuAnnule(d);
       const nomMatiere = getNomMatiere(d.ID_Matiere);
       const nomEnfant = getNomEnfant(d.ID_Enfant);
       
@@ -784,8 +766,17 @@
       const aujourdhuiKey = new Date().toISOString().split('T')[0];
       const estEnRetard = !estFait && dateKey && dateKey < aujourdhuiKey;
 
+      // Pour la vue "Tous", identification de la première échéance future non réalisée (>= aujourd'hui) pour le scroll automatique
+      if (vueActuelle === 'tous' && !idCibleAAncre && !estFait && dateObj) {
+        let dateD = new Date(dateObj);
+        dateD.setHours(0, 0, 0, 0);
+        if (dateD.getTime() >= aujourdhui.getTime()) {
+          idCibleAAncre = 'devoir-' + d.ID_Devoir;
+        }
+      }
+
       html += `
-        <article class="devoir ${estFait ? 'fait' : ''} ${estEnRetard ? 'en-retard' : ''}">
+        <article id="devoir-${d.ID_Devoir}" class="devoir ${estFait ? 'fait' : ''} ${estEnRetard ? 'en-retard' : ''}">
           <div class="devoir-top">
             <button
               class="devoir-check"
@@ -822,6 +813,18 @@
     });
 
     container.innerHTML = html;
+
+    // Positionnement automatique par défilement (scroll) sur le devoir le plus proche dans le futur (vue "Tous")
+    if (vueActuelle === 'tous') {
+      setTimeout(() => {
+        if (idCibleAAncre) {
+          const el = document.getElementById(idCibleAAncre);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }
+      }, 150);
+    }
   }
 
   function calculerCharge(devoirsFiltres) {
@@ -830,11 +833,11 @@
 
     const totalMin = devoirsFiltres.reduce((sum, d) => sum + Number(d.Duree_Estimee_Min || 0), 0);
     const faitsMin = devoirsFiltres
-      .filter(d => d.Statut === 'FAIT' || d.Statut === 'TERMINE')
+      .filter(d => d.Statut === 'FAIT' || d.Statut === 'ANNULE' || d.Statut === 'TERMINE')
       .reduce((sum, d) => sum + Number(d.Duree_Estimee_Min || 0), 0);
 
     const nbDevoirsTotal = devoirsFiltres.length;
-    const nbDevoirsFaits = devoirsFiltres.filter(d => d.Statut === 'FAIT' || d.Statut === 'TERMINE').length;
+    const nbDevoirsFaits = devoirsFiltres.filter(d => d.Statut === 'FAIT' || d.Statut === 'ANNULE' || d.Statut === 'TERMINE').length;
 
     if (nbDevoirsTotal === 0) {
       container.innerHTML = '';
@@ -845,7 +848,7 @@
 
     let labelVue = "Aujourd'hui";
     if (vueActuelle === 'semaine') labelVue = "À venir";
-    if (vueActuelle === 'tous') labelVue = "Prochaine échéance";
+    if (vueActuelle === 'tous') labelVue = "Tous (Historique et futur)";
 
     container.innerHTML = `
       <div class="charge-card">
@@ -884,7 +887,7 @@
   // ACTIONS DEVOIRS (COCHAGE, FORMULAIRE, SUPPRESSION)
   // =====================================================
   function cocherDevoir(idDevoir, statutActuel) {
-    const estFait = (statutActuel === 'FAIT' || statutActuel === 'TERMINE');
+    const estFait = (statutActuel === 'FAIT' || statutActuel === 'ANNULE' || statutActuel === 'TERMINE');
     const nouveauStatut = estFait ? 'A_FAIRE' : 'FAIT';
 
     const d = devoirs.find(x => String(x.ID_Devoir) === String(idDevoir));
@@ -1088,7 +1091,7 @@
     const selectStatut = document.getElementById('formStatut');
     selectStatut.innerHTML = statuts.length > 0
       ? statuts.map(s => `<option value="${s.Code || s.Statut}">${echapperHTML(s.Libelle || s.Statut || s.Code)}</option>`).join('')
-      : '<option value="A_FAIRE">À faire</option><option value="EN_COURS">En cours</option><option value="FAIT">Fait</option>';
+      : '<option value="A_FAIRE">À faire</option><option value="EN_COURS">En cours</option><option value="FAIT">Fait</option><option value="REPORTE">Reporté</option><option value="ANNULE">Annulé</option>';
   }
 
   function afficherToast(message) {
