@@ -891,16 +891,16 @@
       }
 
       if (confirm(`Veux-tu vraiment échanger ${cout} XP de ton épargne contre : "${titreRecompense}" ?`)) {
-        if (p.XP_Disponibles !== undefined) {
-          p.XP_Disponibles -= cout;
-        } else if (p.XP_Dispo !== undefined) {
-          p.XP_Dispo -= cout;
-        } else {
-          p.XP_Disponibles = xpDispo - cout;
-        }
-
-        afficherToast(`🎉 Récompense débloquée : "${titreRecompense}" ! Bon courage aux parents pour la valider ! 🏆`);
-        afficherBoutique();
+        callAPI('acheterRecompense', { idEnfant: enfantSelectionne, cout: cout, recompense: titreRecompense })
+          .then(response => {
+            if (response && response.success) {
+              afficherToast(`🎉 Récompense débloquée : "${titreRecompense}" !`);
+              chargerDonneesDeReference();
+            } else {
+              afficherToast(response && response.error ? response.error.message : "⚠️ Erreur lors de l'achat.");
+            }
+          })
+          .catch(err => afficherErreur(err));
       }
     }
 
@@ -958,6 +958,10 @@
       let html = '';
       let currentGroup = '';
 
+      // Calcul de la date locale au format YYYY-MM-DD (évite le bug UTC)
+      const now = new Date();
+      const aujourdhuiKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
       devoirsFiltres.forEach(d => {
         let dateObj = d.Date_Echeance ? new Date(d.Date_Echeance) : null;
         let dateStr = dateObj ? dateObj.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }) : 'Sans date';
@@ -975,8 +979,7 @@
         let badgePriorite = (d.Priorite === 'HAUTE' || d.Priorite === 'URGENTE') ? `<span class="badge badge-haute">🔥 ${d.Priorite}</span>` : '';
         let badgeEtapes = (d.Etape && d.Nb_Etapes) ? `<span class="badge">Étape ${d.Etape}/${d.Nb_Etapes}</span>` : '';
 
-        const dateKey = d.Date_Echeance ? d.Date_Echeance : '';
-        const aujourdhuiKey = new Date().toISOString().split('T')[0];
+        const dateKey = d.Date_Echeance ? d.Date_Echeance.split('T')[0] : '';
         const estEnRetard = !estFait && dateKey && dateKey < aujourdhuiKey;
 
         if (vueActuelle === 'tous' && !idCibleAAncre && !estFait && dateObj) {
@@ -1041,12 +1044,15 @@
       if (!container) return;
 
       const totalMin = devoirsFiltres.reduce((sum, d) => sum + Number(d.Duree_Estimee_Min || 0), 0);
+      
+      // Exclut le statut ANNULE du calcul du temps réel accompli
+      const estFaitReel = (d) => d.Statut === 'FAIT' || d.Statut === 'TERMINE';
       const faitsMin = devoirsFiltres
-        .filter(d => d.Statut === 'FAIT' || d.Statut === 'ANNULE' || d.Statut === 'TERMINE')
+        .filter(d => estFaitReel(d))
         .reduce((sum, d) => sum + Number(d.Duree_Estimee_Min || 0), 0);
 
       const nbDevoirsTotal = devoirsFiltres.length;
-      const nbDevoirsFaits = devoirsFiltres.filter(d => d.Statut === 'FAIT' || d.Statut === 'ANNULE' || d.Statut === 'TERMINE').length;
+      const nbDevoirsFaits = devoirsFiltres.filter(d => estFaitReel(d)).length;
 
       if (nbDevoirsTotal === 0 && enfantSelectionne === 'TOUS') {
         container.innerHTML = '';
@@ -1188,7 +1194,8 @@
         titreModal.innerText = 'Ajouter un devoir';
         document.getElementById('formIdDevoir').value = '';
         
-        const today = new Date().toISOString().split('T')[0];
+        const now = new Date();
+        const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
         document.getElementById('formDate').value = today;
 
         if (enfantSelectionne !== 'TOUS') {
