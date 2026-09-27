@@ -781,7 +781,7 @@
             <button
               class="devoir-check"
               type="button"
-              onclick="cocherDevoir('${d.ID_Devoir}', '${d.Statut}')"
+              onclick="('${d.ID_Devoir}', '${d.Statut}')"
               aria-label="${estFait ? 'Marquer comme à faire' : 'Marquer comme fait'}">
               ${estFait ? '✓' : ''}
             </button>
@@ -886,8 +886,8 @@
   // =====================================================
   // ACTIONS DEVOIRS (COCHAGE, FORMULAIRE, SUPPRESSION)
   // =====================================================
-  function cocherDevoir(idDevoir, statutActuel) {
-    const estFait = (statutActuel === 'FAIT' || statutActuel === 'ANNULE' || statutActuel === 'TERMINE');
+function cocherDevoir(idDevoir, statutActuel) {
+    const estFait = (statutActuel === 'FAIT' || statutActuel === 'TERMINE');
     const nouveauStatut = estFait ? 'A_FAIRE' : 'FAIT';
 
     const d = devoirs.find(x => String(x.ID_Devoir) === String(idDevoir));
@@ -902,6 +902,15 @@
           afficherErreur(response ? response.error.message : 'Erreur statut');
           rafraichirDonnees();
         } else {
+          // --- NOUVEAU CODE : Vérification silencieuse Gamification ---
+          if (response.data && response.data.gamification) {
+            console.log("🎮 GAMIFICATION DÉTECTÉE :", response.data.gamification);
+            if (response.data.gamification.levelUp) {
+              console.log("⭐ LEVEL UP ! Niveau " + response.data.gamification.niveau);
+            }
+          }
+          // ------------------------------------------------------------
+          
           afficherToast(nouveauStatut === 'FAIT' ? 'Devoir marqué comme fait ! 🎉' : 'Devoir remis à faire');
         }
       })
