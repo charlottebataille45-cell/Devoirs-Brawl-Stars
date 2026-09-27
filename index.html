@@ -172,7 +172,7 @@
     overscroll-behavior-y: contain;
   }
 
-  /* Style Brawl Stars pour la carte Profil et Matières */
+  /* Style Brawl Stars pour Profil, Matières et Boutique */
   .profil-card {
     background: linear-gradient(135deg, #243475 0%, #462678 50%, #611867 100%);
     border: 4px solid #0d122b;
@@ -252,6 +252,67 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
+
+  /* Style Boutique XP */
+  .shop-card {
+    background: linear-gradient(135deg, #1c2756 0%, #2a1b4e 100%);
+    border: 4px solid #0d122b;
+    border-radius: 20px;
+    padding: 16px;
+    margin-bottom: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    box-shadow: 0 6px 0 #070a1a;
+    position: relative;
+  }
+  .shop-item-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .shop-icon {
+    width: 50px;
+    height: 50px;
+    background: rgba(0,0,0,0.4);
+    border: 3px solid #3b4c94;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    font-size: 26px;
+    flex-shrink: 0;
+  }
+  .shop-info { flex: 1; min-width: 0; }
+  .shop-title { font-size: 16px; font-weight: 900; color: #fff; text-shadow: 0 1px 0 #000; margin: 0; }
+  .shop-desc { font-size: 12px; color: #cbd5e1; font-weight: 700; margin-top: 4px; line-height: 1.35; }
+  .shop-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 2px dashed #3b4c94;
+    padding-top: 10px;
+    margin-top: 2px;
+  }
+  .shop-price {
+    font-size: 15px;
+    font-weight: 900;
+    color: #ffd700;
+    text-shadow: 0 1px 0 #000;
+  }
+  .btn-buy {
+    background: linear-gradient(180deg, #20bf6b, #108046);
+    color: #fff;
+    border: 3px solid #0d122b;
+    border-radius: 12px;
+    padding: 8px 16px;
+    font-weight: 900;
+    font-size: 13px;
+    cursor: pointer;
+    box-shadow: 0 3px 0 #070a1a;
+    text-shadow: 0 1px 0 rgba(0,0,0,0.3);
+  }
+  .btn-buy:active { transform: translateY(2px); box-shadow: 0 1px 0 #070a1a; }
+  .btn-buy:disabled { background: #475569; border-color: #1e293b; box-shadow: 0 2px 0 #0f172a; opacity: 0.7; cursor: not-allowed; }
 
   .charge-card {
     position: relative;
@@ -369,10 +430,10 @@
     display:flex; justify-content:space-around; padding:4px 7px env(safe-area-inset-bottom);
     z-index:100; box-shadow:0 -8px 25px rgba(0,0,0,.4);
   }
-  .tab { background:transparent; border:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; color:#8899cb; width:33.33%; min-height:58px; padding:6px 0; cursor:pointer; border-radius:14px; font-weight:900; }
+  .tab { background:transparent; border:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; color:#8899cb; width:25%; min-height:58px; padding:6px 0; cursor:pointer; border-radius:14px; font-weight:900; }
   .tab.active { color:#111; background:linear-gradient(180deg, #ffd700, #ff9900); border: 2px solid #0d122b; box-shadow:0 4px 0 #b35900; text-shadow: none; }
-  .tab-icon { font-size:22px; line-height:1; }
-  .tab-label { font-size:12px; font-weight:900; }
+  .tab-icon { font-size:20px; line-height:1; }
+  .tab-label { font-size:11px; font-weight:900; }
 
   .btn-fab {
     position:fixed; bottom:calc(var(--nav-height) + 14px + env(safe-area-inset-bottom));
@@ -443,8 +504,8 @@
 
     .tabs-bottom { padding-top: 8px; }
     .tab { min-height: 64px; padding: 10px 0; gap: 4px; }
-    .tab-icon { font-size: 24px; }
-    .tab-label { font-size: 13px; }
+    .tab-icon { font-size: 22px; }
+    .tab-label { font-size: 10px; }
 
     .btn-fab {
       width: 66px;
@@ -518,6 +579,10 @@
       <button id="tabSemaine" class="tab" type="button" onclick="changerVue('semaine')">
         <span class="tab-icon">🚀</span>
         <span class="tab-label">À venir</span>
+      </button>
+      <button id="tabBoutique" class="tab" type="button" onclick="changerVue('boutique')">
+        <span class="tab-icon">🎁</span>
+        <span class="tab-label">Boutique</span>
       </button>
     </nav>
   </div>
@@ -633,6 +698,15 @@
   let types = [];
   let profils = [];
 
+  // Catalogue des récompenses de la boutique XP
+  const catalogueRecompenses = [
+    { id: 1, titre: "30 min de Console / Jeux Vidéo", cout: 100, icone: "🎮", desc: "Du temps de jeu en plus validé par les parents." },
+    { id: 2, titre: "Choisir le film de la soirée en famille", cout: 150, icone: "🍿", desc: "C'est toi qui choisis le film ce soir sur le canapé !" },
+    { id: 3, titre: "1 Glace ou Goûter spécial au choix", cout: 200, icone: "🍨", desc: "Une gourmandise de ton choix pour le goûter." },
+    { id: 4, titre: "Couché repoussé de 30 minutes", cout: 250, icone: "🌙", desc: "Le droit de veiller un peu plus tard un soir de weekend." },
+    { id: 5, titre: "Sortie en tête-à-tête (ciné, jeux, balade)", cout: 400, icone: "🎟️", desc: "Un moment privilégié avec un parent au choix !" }
+  ];
+
   let vueActuelle = 'aujourdhui';
   let enfantSelectionne = 'TOUS';
 
@@ -676,7 +750,7 @@
         }
         afficherToast('Données actualisées');
         devoirs = response.data || [];
-        afficherDevoirs();
+        routerAffichage();
       })
       .catch(err => {
         if (btn) btn.classList.remove('spinning');
@@ -710,13 +784,13 @@
         if (!response || !response.success) return afficherErreur(response ? response.error.message : 'Erreur Devoirs');
         
         devoirs = response.data || [];
-        afficherDevoirs();
+        routerAffichage();
       })
       .catch(afficherErreur);
   }
 
   // =====================================================
-  // GESTION DE L'INTERFACE ET DES FILTRES
+  // GESTION DE L'INTERFACE ET DES VUES
   // =====================================================
   function genererFiltreEnfants() {
     const container = document.getElementById('listeEnfants');
@@ -738,7 +812,7 @@
     });
     btnElement.classList.add('active');
     btnElement.setAttribute('aria-pressed', 'true');
-    afficherDevoirs();
+    routerAffichage();
   }
 
   function changerVue(vue) {
@@ -748,12 +822,99 @@
     if (vue === 'aujourdhui') document.getElementById('tabAujourdHui').classList.add('active');
     if (vue === 'tous') document.getElementById('tabTous').classList.add('active');
     if (vue === 'semaine') document.getElementById('tabSemaine').classList.add('active');
+    if (vue === 'boutique') document.getElementById('tabBoutique').classList.add('active');
     
-    afficherDevoirs();
+    routerAffichage();
+  }
+
+  function routerAffichage() {
+    if (vueActuelle === 'boutique') {
+      document.getElementById('chargeContainer').innerHTML = '';
+      afficherBoutique();
+    } else {
+      afficherDevoirs();
+    }
   }
 
   // =====================================================
-  // AFFICHAGE DU PROFIL DE GAMIFICATION & STATS MATIERES (STYLE BRAWL STARS)
+  // BOUTIQUE DE RÉCOMPENSES XP
+  // =====================================================
+  function afficherBoutique() {
+    const container = document.getElementById('contenu');
+
+    if (enfantSelectionne === 'TOUS') {
+      container.innerHTML = `
+        <div style="text-align:center; padding:50px 20px;">
+          <div style="font-size: 48px; margin-bottom: 15px;">🎁</div>
+          <h2 style="color: #ffd700; margin-bottom: 10px; font-weight: 900;">Boutique XP</h2>
+          <p style="color: var(--muted); font-weight: 800; font-size: 15px; line-height: 1.4;">
+            Choisis ton prénom en haut pour voir tes points XP et débloquer tes récompenses ! 🚀
+          </p>
+        </div>
+      `;
+      return;
+    }
+
+    let p = profils.find(x => String(x.ID_Enfant) === String(enfantSelectionne)) || {
+      XP_Total: 0,
+      Niveau_Actuel: 1,
+      Titre_Actuel: "Débutant"
+    };
+
+    let headerBoutique = `
+      <div class="profil-card" style="margin-bottom: 20px;">
+        <div class="profil-header">
+          <div>
+            <span class="brawl-level-badge">BOUTIQUE OFFICIELLE</span>
+            <div class="profil-titre-niveau" style="margin-top: 4px;">🎁 Dépense tes XP !</div>
+          </div>
+          <div class="brawl-xp-badge">
+            ⭐ ${p.XP_Total} XP
+          </div>
+        </div>
+      </div>
+    `;
+
+    let itemsHTML = catalogueRecompenses.map(item => {
+      const peutAcheter = p.XP_Total >= item.cout;
+      return `
+        <div class="shop-card">
+          <div class="shop-item-top">
+            <div class="shop-icon">${item.icone}</div>
+            <div class="shop-info">
+              <div class="shop-title">${echapperHTML(item.titre)}</div>
+              <div class="shop-desc">${echapperHTML(item.desc)}</div>
+            </div>
+          </div>
+          <div class="shop-footer">
+            <div class="shop-price">⭐ ${item.cout} XP</div>
+            <button class="btn-buy" ${peutAcheter ? '' : 'disabled'} onclick="acheterRecompense(${item.cout}, '${echapperHTML(item.titre)}')">
+              ${peutAcheter ? 'ÉCHANGER' : 'XP insuffisants'}
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    container.innerHTML = headerBoutique + itemsHTML;
+  }
+
+  function acheterRecompense(cout, titreRecompense) {
+    let p = profils.find(x => String(x.ID_Enfant) === String(enfantSelectionne));
+    if (!p || p.XP_Total < cout) {
+      afficherToast("⚠️ Tu n'as pas assez d'XP !");
+      return;
+    }
+
+    if (confirm(`Veux-tu vraiment échanger ${cout} XP contre : "${titreRecompense}" ?`)) {
+      p.XP_Total -= cout;
+      afficherToast(`🎉 Récompense débloquée : "${titreRecompense}" ! Bon courage aux parents pour la valider ! 🏆`);
+      afficherBoutique();
+    }
+  }
+
+  // =====================================================
+  // AFFICHAGE DU PROFIL DE GAMIFICATION & STATS MATIERES
   // =====================================================
   function afficherProfilEnfant(idEnfant) {
     if (idEnfant === 'TOUS') return '';
@@ -776,7 +937,7 @@
     let htmlMatieres = Object.keys(statsMatieres).map(mat => `
       <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; padding: 7px 0; border-bottom: 2px dashed rgba(255,255,255,.15);">
         <span style="font-weight: 800;">📚 ${echapperHTML(mat)}</span>
-        <span class="brawl-level" style="font-size: 11px; padding: 2px 8px;">${statsMatieres[mat]} min</span>
+        <span class="brawl-level" style="font-size: 11px; padding: 2px 8px; font-weight:900;">${statsMatieres[mat]} min</span>
       </div>
     `).join('') || '<div style="font-size: 13px; color: #cbd5e1; font-weight: 700;">Aucun devoir validé pour l\'instant. C\'est parti ! 🚀</div>';
 
@@ -859,7 +1020,7 @@
     calculerCharge(devoirsFiltres);
 
     if (devoirsFiltres.length === 0) {
-      container.innerHTML = '<div style="text-align:center; padding:40px 20px; color:var(--muted); font-weight:800;">Aucun devoir pour cette sélection. Bien joué ! 🎉</div>';
+      container.innerHTML += '<div style="text-align:center; padding:30px 20px; color:var(--muted); font-weight:800;">Aucun devoir pour cette sélection. Bien joué ! 🎉</div>';
       return;
     }
     
@@ -932,7 +1093,7 @@
       `;
     });
 
-    container.innerHTML = html;
+    container.innerHTML += html;
 
     if (vueActuelle === 'tous') {
       setTimeout(() => {
