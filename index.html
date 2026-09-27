@@ -970,8 +970,10 @@
   // =====================================================
   // ACTIONS DEVOIRS (COCHAGE AVEC GAMIFICATION)
   // =====================================================
-  function cocherDevoir(idDevoir, statutActuel) {
-    const nouveauStatut = (statutActuel === 'FAIT' || statutActuel === 'TERMINE') ? 'A_FAIRE' : 'FAIT';
+function cocherDevoir(idDevoir, statutActuel) {
+    // Si le devoir est déjà fait ou terminé, on le remet à 'A_FAIRE'. Sinon, on le passe à 'FAIT'.
+    const estDejaFait = (statutActuel === 'FAIT' || statutActuel === 'TERMINE' || statutActuel === 'ANNULE');
+    const nouveauStatut = estDejaFait ? 'A_FAIRE' : 'FAIT';
     
     callAPI('changerStatut', { idDevoir: idDevoir, nouveauStatut: nouveauStatut })
       .then(response => {
