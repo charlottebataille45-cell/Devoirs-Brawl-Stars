@@ -1,2 +1,2 @@
 # Devoirs-Brawl-Stars
-Interface web liée à Google Sheets
+Interface pour aider à gérer les devoirs
