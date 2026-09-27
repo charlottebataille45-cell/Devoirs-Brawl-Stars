@@ -422,7 +422,6 @@
   .loading { min-height:190px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; color:var(--muted); font-size:14px; font-weight:800; }
   .loading-spinner { width:28px; height:28px; border:4px solid #3b4c94; border-top-color:#ffd700; border-radius:50%; animation:spin .8s linear infinite; }
 
-  /* Barre de navigation corrigée pour afficher parfaitement les 4 boutons */
   .tabs-bottom {
     position: fixed; bottom: 0; left: 0; right: 0; min-height: var(--nav-height);
     background: rgba(17,24,51,.98); border-top: 4px solid #0d122b;
@@ -434,7 +433,7 @@
     background: transparent; border: 0; 
     display: flex; flex-direction: column; align-items: center; justify-content: center; 
     gap: 2px; color: #8899cb; 
-    flex: 1; /* Répartit l'espace de manière égale et automatique pour les 4 boutons */
+    flex: 1; 
     min-height: 58px; padding: 4px 2px; cursor: pointer; border-radius: 14px; font-weight: 900; 
     max-width: 25%;
     overflow: hidden;
@@ -476,8 +475,8 @@
   .advanced-toggle:active { transform:translateY(2px); box-shadow:none; }
   .advanced-fields.hidden { display:none; }
   .modal-actions { position:sticky; bottom:calc(-20px - env(safe-area-inset-bottom)); background:#1c2756; margin:6px -20px -20px; padding:12px 20px calc(20px + env(safe-area-inset-bottom)); border-top:3px solid #3b4c94; }
-  .btn-block { width:100%; min-height:54px; background:linear-gradient(180deg, #20bf6b, #108046); color:#fff; border:4px solid #0d122b; padding:11px 14px; border-radius:16px; font-size:18px; font-weight:900; cursor:pointer; box-shadow:0 4px 0 #070a1a; text-shadow:0 2px 0 rgba(0,0,0,.3); }
-  .btn-block:active { transform:translateY(4px); box-shadow:0 0 0 #070a1a; }
+  .btn-block { width:100%; min-height:54px; background:linear-gradient(180deg, #20bf6b, #108046); color:#fff; border:4px solid #0d122b; padding:11px 14px; border-radius:16px; font-size:18px; font-weight:900; cursor:pointer; box-shadow:0 4px 0 #0d122b; text-shadow:0 2px 0 rgba(0,0,0,.3); }
+  .btn-block:active { transform:translateY(4px); box-shadow:0 0 0 #0d122b; }
   .btn-block:disabled { background:#475569; border-color:#1e293b; box-shadow:0 3px 0 #0f172a; }
   .form-error { margin:6px 0 10px; padding:10px 12px; border-radius:12px; background:#661a1a; border:3px solid #ff5c57; color:#ff9996; font-size:13px; font-weight:800; }
   .toast { position:fixed; top:calc(10px + env(safe-area-inset-top)); left:50%; max-width:calc(100vw - 28px); transform:translateX(-50%); background:#1c2756; color:#ffd700; border:4px solid #0d122b; padding:12px 18px; border-radius:999px; font-size:14px; font-weight:900; z-index:300; box-shadow:0 6px 20px rgba(0,0,0,.5); text-shadow: 0 1px 0 #000; }
@@ -921,64 +920,6 @@
   }
 
   // =====================================================
-  // AFFICHAGE DU PROFIL DE GAMIFICATION & STATS MATIERES
-  // =====================================================
-  function afficherProfilEnfant(idEnfant) {
-    if (idEnfant === 'TOUS') return '';
-    
-    let p = profils.find(x => String(x.ID_Enfant) === String(idEnfant)) || {
-      XP_Total: 0,
-      Niveau_Actuel: 1,
-      Titre_Actuel: "Débutant",
-      Serie_Actuelle: 0,
-      Serie_Record: 0
-    };
-
-    const devoirsEnfant = devoirs.filter(d => String(d.ID_Enfant) === String(idEnfant) && (d.Statut === 'FAIT' || d.Statut === 'TERMINE'));
-    let statsMatieres = {};
-    devoirsEnfant.forEach(d => {
-      let nomMat = getNomMatiere(d.ID_Matiere);
-      statsMatieres[nomMat] = (statsMatieres[nomMat] || 0) + Number(d.Duree_Estimee_Min || 0);
-    });
-
-    let htmlMatieres = Object.keys(statsMatieres).map(mat => `
-      <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; padding: 7px 0; border-bottom: 2px dashed rgba(255,255,255,.15);">
-        <span style="font-weight: 800;">📚 ${echapperHTML(mat)}</span>
-        <span class="brawl-level" style="font-size: 11px; padding: 2px 8px; font-weight:900;">${statsMatieres[mat]} min</span>
-      </div>
-    `).join('') || '<div style="font-size: 13px; color: #cbd5e1; font-weight: 700;">Aucun devoir validé pour l\'instant. C\'est parti ! 🚀</div>';
-
-    return `
-      <div class="profil-card">
-        <div class="profil-header">
-          <div>
-            <span class="brawl-level-badge">NIVEAU ${p.Niveau_Actuel}</span>
-            <div class="profil-titre-niveau" style="margin-top: 4px;">✨ ${echapperHTML(p.Titre_Actuel)}</div>
-          </div>
-          <div class="brawl-xp-badge">
-            ⭐ ${p.XP_Total} XP
-          </div>
-        </div>
-        <div class="profil-stats-grid">
-          <div class="profil-stat-box">
-            <div class="profil-stat-value">🔥 ${p.Serie_Actuelle}</div>
-            <div class="profil-stat-label">Série en cours</div>
-          </div>
-          <div class="profil-stat-box">
-            <div class="profil-stat-value">🏆 ${p.Serie_Record}</div>
-            <div class="profil-stat-label">Record série</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="profil-card" style="background: linear-gradient(135deg, #162044 0%, #1c2756 100%); margin-top: -8px;">
-        <div style="font-size: 14px; font-weight: 900; margin-bottom: 10px; color: #ffd700; text-transform: uppercase; text-shadow: 0 1px 0 #000;">📊 Temps validé par matière</div>
-        ${htmlMatieres}
-      </div>
-    `;
-  }
-
-  // =====================================================
   // AFFICHAGE PRINCIPAL DES DEVOIRS ET DE LA CHARGE
   // =====================================================
   function getNomEnfant(id) {
@@ -993,6 +934,7 @@
 
   function afficherDevoirs() {
     const container = document.getElementById('contenu');
+    container.innerHTML = ''; // Nettoyage de la vue
     
     let devoirsFiltres = devoirs.filter(d => enfantSelectionne === 'TOUS' || d.ID_Enfant === enfantSelectionne);
     
@@ -1124,10 +1066,10 @@
     const nbDevoirsTotal = devoirsFiltres.length;
     const nbDevoirsFaits = devoirsFiltres.filter(d => d.Statut === 'FAIT' || d.Statut === 'ANNULE' || d.Statut === 'TERMINE').length;
 
-    let htmlProfil = afficherProfilEnfant(enfantSelectionne);
+    // Les cartes de profil et récompenses ne sont plus affichées sur les 3 vues initiales de devoirs
 
     if (nbDevoirsTotal === 0 && enfantSelectionne === 'TOUS') {
-      container.innerHTML = htmlProfil;
+      container.innerHTML = '';
       return;
     }
 
@@ -1138,7 +1080,6 @@
     if (vueActuelle === 'tous') labelVue = "Tous";
 
     container.innerHTML = `
-      ${htmlProfil}
       <div class="charge-card">
         <div>
           <div class="charge-number">${faitsMin} / ${totalMin} min</div>
