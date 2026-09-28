@@ -217,7 +217,7 @@
     border: 3px solid #000;
     border-radius: 12px;
     padding: 6px 12px;
-    margin: 20px 0 12px;
+    margin: 16px 0 12px;
     box-shadow: 0 3px 0 #b35900;
     text-transform: uppercase;
     display: flex;
@@ -487,16 +487,16 @@
         <span class="tab-icon">🎯</span>
         <span class="tab-label">Aujourd’hui</span>
       </button>
-      <button id="tabTous" class="tab" type="button" onclick="changerVue('tous')">
-        <span class="tab-icon">🏆</span>
-        <span class="tab-label">Tous</span>
-      </button>
-      <button id="tabSemaine" class="tab" type="button" onclick="changerVue('semaine')">
+      <button id="tabAVenir" class="tab" type="button" onclick="changerVue('tous')">
         <span class="tab-icon">🚀</span>
         <span class="tab-label">À venir</span>
       </button>
-      <button id="tabBoutique" class="tab" type="button" onclick="changerVue('boutique')">
+      <button id="tabRecompenses" class="tab" type="button" onclick="changerVue('recompenses')">
         <span class="tab-icon">🎁</span>
+        <span class="tab-label">Récompenses</span>
+      </button>
+      <button id="tabBoutique" class="tab" type="button" onclick="changerVue('boutique')">
+        <span class="tab-icon">🛒</span>
         <span class="tab-label">Boutique</span>
       </button>
     </nav>
@@ -639,7 +639,7 @@
           }
           afficherToast('Données actualisées');
           devoirs = response.data || [];
-          if (vueActuelle === 'boutique' && enfantSelectionne !== 'TOUS') {
+          if ((vueActuelle === 'boutique' || vueActuelle === 'recompenses') && enfantSelectionne !== 'TOUS') {
             chargerSuiviRecompenses();
           } else {
             routerAffichage();
@@ -701,7 +701,7 @@
       btnElement.classList.add('active');
       btnElement.setAttribute('aria-pressed', 'true');
 
-      if (vueActuelle === 'boutique' && id !== 'TOUS') {
+      if ((vueActuelle === 'boutique' || vueActuelle === 'recompenses') && id !== 'TOUS') {
         chargerSuiviRecompenses();
       } else {
         routerAffichage();
@@ -713,11 +713,11 @@
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       
       if (vue === 'aujourdhui') document.getElementById('tabAujourdHui').classList.add('active');
-      if (vue === 'tous') document.getElementById('tabTous').classList.add('active');
-      if (vue === 'semaine') document.getElementById('tabSemaine').classList.add('active');
+      if (vue === 'tous') document.getElementById('tabAVenir').classList.add('active');
+      if (vue === 'recompenses') document.getElementById('tabRecompenses').classList.add('active');
       if (vue === 'boutique') document.getElementById('tabBoutique').classList.add('active');
       
-      if (vue === 'boutique' && enfantSelectionne !== 'TOUS') {
+      if ((vue === 'boutique' || vue === 'recompenses') && enfantSelectionne !== 'TOUS') {
         chargerSuiviRecompenses();
       } else {
         routerAffichage();
@@ -728,6 +728,9 @@
       if (vueActuelle === 'boutique') {
         document.getElementById('chargeContainer').innerHTML = '';
         afficherBoutique();
+      } else if (vueActuelle === 'recompenses') {
+        document.getElementById('chargeContainer').innerHTML = '';
+        afficherMesRecompenses();
       } else {
         afficherDevoirs();
       }
@@ -753,10 +756,10 @@
       if (enfantSelectionne === 'TOUS') {
         container.innerHTML = `
           <div style="text-align:center; padding:50px 20px;">
-            <div style="font-size: 48px; margin-bottom: 15px;">🎁</div>
+            <div style="font-size: 48px; margin-bottom: 15px;">🛒</div>
             <h2 style="color: #ffd700; margin-bottom: 10px; font-weight: 900;">Boutique XP</h2>
             <p style="color: var(--muted); font-weight: 800; font-size: 15px; line-height: 1.4;">
-              Choisis ton prénom en haut pour voir ton épargne XP, acheter des récompenses et gérer ton coffre ! 🚀
+              Choisis ton prénom en haut pour voir ton épargne XP et acheter des récompenses ! 🛒
             </p>
           </div>
         `;
@@ -769,7 +772,6 @@
 
       let xpTotale = p.XP_Total !== undefined ? p.XP_Total : (p.XP_Totale || 0);
       let xpDispo = p.XP_Disponibles !== undefined ? p.XP_Disponibles : (p.XP_Dispo !== undefined ? p.XP_Dispo : xpTotale);
-      let nbBadges = p.Badges || 0;
 
       let prochainObjectif = catalogueRecompenses.find(item => item.cout > xpDispo) || catalogueRecompenses[catalogueRecompenses.length - 1];
       let pourcentageObj = Math.min(100, Math.round((xpDispo / prochainObjectif.cout) * 100));
@@ -830,19 +832,37 @@
         `;
       }).join('');
 
-      // Rubrique MES RÉCOMPENSES
+      container.innerHTML = headerBoutique + itemsCatalogueHTML;
+    }
+
+    function afficherMesRecompenses() {
+      const container = document.getElementById('contenu');
+
+      if (enfantSelectionne === 'TOUS') {
+        container.innerHTML = `
+          <div style="text-align:center; padding:50px 20px;">
+            <div style="font-size: 48px; margin-bottom: 15px;">🎁</div>
+            <h2 style="color: #ffd700; margin-bottom: 10px; font-weight: 900;">Mes Récompenses</h2>
+            <p style="color: var(--muted); font-weight: 800; font-size: 15px; line-height: 1.4;">
+              Choisis ton prénom en haut pour ouvrir ton coffre à récompenses ! 🎁
+            </p>
+          </div>
+        `;
+        return;
+      }
+
       let mesRecompensesHTML = `
-        <div id="sectionMesRecompenses" class="section-title-bar">🎁 MES RÉCOMPENSES</div>
+        <div class="section-title-bar">🎁 MES RÉCOMPENSES</div>
         <div class="counters-bar">
-          <span style="color: #ffd700;">🎁 Récompenses disponibles : ${recompensesEnfant.compteurs.disponibles}</span>
-          <span style="color: #20bf6b;">✓ Récompenses utilisées : ${recompensesEnfant.compteurs.utilisees}</span>
+          <span style="color: #ffd700;">🎁 Disponibles : ${recompensesEnfant.compteurs.disponibles}</span>
+          <span style="color: #20bf6b;">✓ Utilisées : ${recompensesEnfant.compteurs.utilisees}</span>
         </div>
       `;
 
       // Categorie À UTILISER
       mesRecompensesHTML += `<div style="font-size: 13px; font-weight: 900; color: #ffd700; margin: 12px 0 8px; text-transform: uppercase;">À UTILISER</div>`;
       if (recompensesEnfant.aUtiliser.length === 0) {
-        mesRecompensesHTML += `<div style="text-align:center; padding: 15px; color: var(--muted); font-size: 13px; font-weight: 800;">Aucune récompense en attente d'utilisation.</div>`;
+        mesRecompensesHTML += `<div style="text-align:center; padding: 20px; color: var(--muted); font-size: 13px; font-weight: 800;">Aucune récompense en attente d'utilisation.</div>`;
       } else {
         mesRecompensesHTML += recompensesEnfant.aUtiliser.map(r => {
           const itemCat = catalogueRecompenses.find(c => c.id === Number(r.ID_Catalogue)) || { icone: "🎁" };
@@ -868,7 +888,7 @@
       // Categorie HISTORIQUE
       mesRecompensesHTML += `<div style="font-size: 13px; font-weight: 900; color: var(--muted); margin: 20px 0 8px; text-transform: uppercase;">HISTORIQUE</div>`;
       if (recompensesEnfant.utilisees.length === 0) {
-        mesRecompensesHTML += `<div style="text-align:center; padding: 15px; color: var(--muted); font-size: 13px; font-weight: 800;">Aucune récompense dans l'historique.</div>`;
+        mesRecompensesHTML += `<div style="text-align:center; padding: 20px; color: var(--muted); font-size: 13px; font-weight: 800;">Aucune récompense dans l'historique.</div>`;
       } else {
         mesRecompensesHTML += recompensesEnfant.utilisees.map(r => {
           const itemCat = catalogueRecompenses.find(c => c.id === Number(r.ID_Catalogue)) || { icone: "🎁" };
@@ -891,7 +911,7 @@
         }).join('');
       }
 
-      container.innerHTML = headerBoutique + itemsCatalogueHTML + mesRecompensesHTML;
+      container.innerHTML = mesRecompensesHTML;
     }
 
     function commanderRecompense(idCatalogue) {
@@ -904,7 +924,6 @@
         .then(res => {
           isProcessing = false;
           if (res && res.success) {
-            // Mise à jour locale du profil
             let p = profils.find(x => String(x.ID_Enfant) === String(enfantSelectionne));
             if (p) {
               if (p.XP_Disponibles !== undefined) p.XP_Disponibles = res.data.nouveauSoldeXP;
@@ -912,10 +931,8 @@
               else p.XP_Total = res.data.nouveauSoldeXP;
             }
             
-            // Rechargement du suivi des récompenses
             chargerSuiviRecompenses();
 
-            // Modale animation
             document.getElementById('achatTitreRec').innerText = (item ? item.icone + ' ' : '') + (item ? item.titre : '');
             document.getElementById('modalAchatAide').classList.remove('hidden');
           } else {
@@ -935,8 +952,7 @@
 
     function voirMesRecompenses() {
       fermerModalAchat();
-      const el = document.getElementById('sectionMesRecompenses');
-      if (el) el.scrollIntoView({ behavior: 'smooth' });
+      changerVue('recompenses');
     }
 
     function demanderUtiliserRecompense(idRecompense, titre, icone) {
@@ -1029,13 +1045,6 @@
           let dateD = new Date(d.Date_Echeance);
           dateD.setHours(0, 0, 0, 0);
           return !estFaitOuAnnule(d) && dateD.getTime() <= aujourdhui.getTime();
-        });
-      } else if (vueActuelle === 'semaine') { 
-        devoirsFiltres = devoirsFiltres.filter(d => {
-          if (!d.Date_Echeance) return false;
-          let dateD = new Date(d.Date_Echeance);
-          dateD.setHours(0, 0, 0, 0);
-          return !estFaitOuAnnule(d) && dateD.getTime() >= aujourdhui.getTime();
         });
       }
 
@@ -1155,9 +1164,7 @@
 
       const pourcentage = totalMin > 0 ? Math.round((faitsMin / totalMin) * 100) : 0;
 
-      let labelVue = "Aujourd'hui";
-      if (vueActuelle === 'semaine') labelVue = "À venir";
-      if (vueActuelle === 'tous') labelVue = "Tous";
+      let labelVue = vueActuelle === 'aujourdhui' ? "Aujourd'hui" : "À venir";
 
       container.innerHTML = `
         <div class="charge-card">
