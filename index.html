@@ -580,9 +580,9 @@
 
   <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
-  <script>
+<script>
     const API_URL = "https://script.google.com/macros/s/AKfycbwSBdQHLeLF_sGy0dVq3gtFPHIm2saKyYb2DMTidzVCXPXIdVoI1LY87mC0U8M6HhKb/exec";
-    const GITHUB_RECOMPENSES_URL = "https://raw.githubusercontent.com/charlottebataille45-cell/Devoirs-Brawl-Stars/main/catalogueRecompenses.json";
+    const REFERENTIELS_URL = "public/data/referentiels.json";
 
     let devoirs = [];
     let enfants = [];
@@ -614,24 +614,32 @@
       });
     }
 
-    function chargerCatalogueGitHub() {
-      return fetch(GITHUB_RECOMPENSES_URL)
-        .then(res => {
-          if (!res.ok) throw new Error("Erreur de chargement du catalogue GitHub");
-          return res.json();
-        })
-        .then(data => {
-          catalogueRecompenses = data || [];
-        })
-        .catch(err => {
-          console.error("Erreur catalogue GitHub:", err);
-        });
+    async function chargerReferentielsLocaux() {
+      try {
+        const res = await fetch(REFERENTIELS_URL);
+        if (!res.ok) throw new Error("Impossible de charger " + REFERENTIELS_URL);
+        const data = await res.json();
+
+        enfants = data.enfants || [];
+        matieres = data.matieres || [];
+        statuts = data.statuts || [];
+        priorites = data.priorites || [];
+        types = data.types || [];
+        catalogueRecompenses = data.catalogueRecompenses || data.catalogue || [];
+        if (data.profils) profils = data.profils;
+
+        genererFiltreEnfants();
+        remplirListesDeroulantes();
+      } catch (err) {
+        console.error("Erreur lors du chargement des référentiels locaux :", err);
+        afficherToast("⚠️ Référentiels locaux non chargés");
+      }
     }
 
-    document.addEventListener("DOMContentLoaded", function() {
+    document.addEventListener("DOMContentLoaded", async function() {
       afficherDateCourante();
-      chargerCatalogueGitHub();
-      chargerDonneesDeReference();
+      await chargerReferentielsLocaux();
+      chargerDevoirs();
     });
 
     function afficherDateCourante() {
@@ -652,6 +660,8 @@
           }
           afficherToast('Données actualisées');
           devoirs = response.data || [];
+          if (response.profils) profils = response.profils;
+
           if ((vueActuelle === 'boutique' || vueActuelle === 'recompenses') && enfantSelectionne !== 'TOUS') {
             chargerSuiviRecompenses();
           } else {
@@ -664,30 +674,12 @@
         });
     }
 
-    function chargerDonneesDeReference() {
-      callAPI('getInitialData')
-        .then(response => {
-          if (!response || !response.success) return afficherErreur(response ? response.error.message : 'Erreur API');
-          
-          enfants = response.data.enfants || [];
-          matieres = response.data.matieres || [];
-          statuts = response.data.statuts || [];
-          priorites = response.data.priorites || [];
-          types = response.data.types || [];
-          profils = response.data.profils || [];
-
-          genererFiltreEnfants();
-          remplirListesDeroulantes();
-          chargerDevoirs();
-        })
-        .catch(afficherErreur);
-    }
-
     function chargerDevoirs() {
       callAPI('getDevoirsFamille')
         .then(response => {
           if (!response || !response.success) return afficherErreur(response ? response.error.message : 'Erreur Devoirs');
           devoirs = response.data || [];
+          if (response.profils) profils = response.profils;
           routerAffichage();
         })
         .catch(afficherErreur);
