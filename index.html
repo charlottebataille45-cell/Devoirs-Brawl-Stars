@@ -41,10 +41,7 @@
   body {
     margin: 0;
     position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    top: 0; bottom: 0; left: 0; right: 0;
     height: 100%;
     font-family: "Arial Rounded MT Bold", "Trebuchet MS", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     background:
@@ -134,7 +131,6 @@
     overflow-x: auto;
     overscroll-behavior-x: contain;
     scrollbar-width: none;
-    -ms-overflow-style: none;
     padding: 2px 2px 5px;
     -webkit-overflow-scrolling: touch;
   }
@@ -213,7 +209,35 @@
     text-transform: uppercase;
   }
 
-  .shop-card {
+  .section-title-bar {
+    font-weight: 900;
+    font-size: 16px;
+    color: #111;
+    background: linear-gradient(180deg, #ffd700, #ff9900);
+    border: 3px solid #000;
+    border-radius: 12px;
+    padding: 6px 12px;
+    margin: 20px 0 12px;
+    box-shadow: 0 3px 0 #b35900;
+    text-transform: uppercase;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .counters-bar {
+    background: rgba(0,0,0,0.4);
+    border: 3px solid #3b4c94;
+    border-radius: 14px;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    font-weight: 900;
+  }
+
+  .shop-card, .rec-card {
     background: linear-gradient(135deg, #1c2756 0%, #2a1b4e 100%);
     border: 4px solid #0d122b;
     border-radius: 20px;
@@ -223,16 +247,15 @@
     flex-direction: column;
     gap: 10px;
     box-shadow: 0 6px 0 #070a1a;
-    position: relative;
   }
-  .shop-item-top {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
+  .rec-card.used {
+    opacity: 0.65;
+    background: linear-gradient(135deg, #121936 0%, #1a152e 100%);
   }
+
+  .shop-item-top { display: flex; align-items: flex-start; gap: 12px; }
   .shop-icon {
-    width: 50px;
-    height: 50px;
+    width: 50px; height: 50px;
     background: rgba(0,0,0,0.4);
     border: 3px solid #3b4c94;
     border-radius: 14px;
@@ -252,13 +275,9 @@
     padding-top: 10px;
     margin-top: 2px;
   }
-  .shop-price {
-    font-size: 15px;
-    font-weight: 900;
-    color: #ffd700;
-    text-shadow: 0 1px 0 #000;
-  }
-  .btn-buy {
+  .shop-price { font-size: 15px; font-weight: 900; color: #ffd700; text-shadow: 0 1px 0 #000; }
+
+  .btn-buy, .btn-use {
     background: linear-gradient(180deg, #20bf6b, #108046);
     color: #fff;
     border: 3px solid #0d122b;
@@ -270,8 +289,18 @@
     box-shadow: 0 3px 0 #070a1a;
     text-shadow: 0 1px 0 rgba(0,0,0,0.3);
   }
-  .btn-buy:active { transform: translateY(2px); box-shadow: 0 1px 0 #070a1a; }
-  .btn-buy:disabled { background: #475569; border-color: #1e293b; box-shadow: 0 2px 0 #0f172a; opacity: 0.7; cursor: not-allowed; }
+  .btn-buy:active, .btn-use:active { transform: translateY(2px); box-shadow: 0 1px 0 #070a1a; }
+  .btn-buy:disabled, .btn-use:disabled { background: #475569; border-color: #1e293b; box-shadow: 0 2px 0 #0f172a; opacity: 0.7; cursor: not-allowed; }
+
+  .badge-used {
+    background: #20bf6b;
+    color: #fff;
+    border: 2px solid #0d122b;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 900;
+  }
 
   .charge-card {
     position: relative;
@@ -285,9 +314,7 @@
   }
   .charge-card::after {
     content: "★";
-    position: absolute;
-    right: 12px;
-    top: 8px;
+    position: absolute; right: 12px; top: 8px;
     color: rgba(255,212,59,.9);
     font-size: 34px;
     text-shadow: 0 2px 0 #000;
@@ -309,7 +336,6 @@
     border-radius: 12px;
     padding: 6px 12px;
     box-shadow: 0 3px 0 #b35900;
-    text-shadow: 0 1px 0 rgba(255,255,255,0.4);
     text-transform: uppercase;
   }
 
@@ -327,10 +353,7 @@
   }
   .devoir::before {
     content:"";
-    position:absolute;
-    left:-4px;
-    top:-4px;
-    bottom:-4px;
+    position:absolute; left:-4px; top:-4px; bottom:-4px;
     width:10px;
     background:var(--blue);
     border-radius: 16px 0 0 16px;
@@ -339,46 +362,39 @@
   .devoir.en-retard::before { background: var(--red); }
   .devoir-top { display:flex; gap:12px; align-items:flex-start; }
   .devoir-check {
-    width: 42px;
-    height: 42px;
-    margin-top: 0;
+    width: 42px; height: 42px;
     flex-shrink:0;
     border:3px solid #0d122b;
     border-radius:50%;
     background: linear-gradient(180deg, #324796, #1c2756);
-    display:flex;
-    align-items:center;
-    justify-content:center;
+    display:flex; align-items:center; justify-content:center;
     cursor:pointer;
-    font-size:20px;
-    font-weight:900;
-    color:#fff;
+    font-size:20px; font-weight:900; color:#fff;
     box-shadow: 0 4px 0 #070a1a;
   }
   .devoir-check:active { transform:translateY(2px); box-shadow:0 1px 0 #070a1a; }
-  .devoir.fait .devoir-check { background: linear-gradient(180deg, #20bf6b, #108046); border-color:#0d122b; box-shadow:0 4px 0 #070a1a; }
+  .devoir.fait .devoir-check { background: linear-gradient(180deg, #20bf6b, #108046); }
   .devoir.fait { opacity:.6; }
   .devoir.fait .devoir-titre { text-decoration:line-through; color: #94a3b8; }
   .devoir-main { flex:1; min-width:0; }
   .devoir-title-row { display:flex; align-items:flex-start; gap:8px; }
   .devoir-titre { font-weight:900; margin:0; font-size:16px; line-height:1.3; flex:1; overflow-wrap:anywhere; color:#fff; text-shadow: 0 1px 0 #000; }
   .devoir-menu {
-    width:38px; height:36px; flex:0 0 auto; margin:-3px -3px 0 0;
+    width:38px; height:36px; flex:0 0 auto;
     border:3px solid #0d122b; border-radius:12px; background:#243475; color:#fff;
-    font-weight:900; letter-spacing:2px; cursor:pointer; box-shadow:0 3px 0 #070a1a;
+    font-weight:900; cursor:pointer; box-shadow:0 3px 0 #070a1a;
   }
-  .devoir-menu:active, .devoir-menu[aria-expanded="true"] { transform:translateY(2px); box-shadow:none; background:#1c2756; }
-  .devoir-description { font-size:13px; color:#cbd5e1; margin-top:7px; line-height:1.35; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; font-weight:700; }
-  .devoir-meta { display:flex; flex-wrap:wrap; gap:6px; color:#cbd5e1; font-size:12px; margin-top:8px; padding-right:30px; align-items:center; }
-  .badge { background:#111833; border:2px solid #3b4c94; padding:4px 9px; border-radius:999px; font-size:11px; line-height:1; font-weight:900; white-space:nowrap; }
+  .devoir-menu:active { transform:translateY(2px); box-shadow:none; }
+  .devoir-description { font-size:13px; color:#cbd5e1; margin-top:7px; line-height:1.35; font-weight:700; }
+  .devoir-meta { display:flex; flex-wrap:wrap; gap:6px; color:#cbd5e1; font-size:12px; margin-top:8px; align-items:center; }
+  .badge { background:#111833; border:2px solid #3b4c94; padding:4px 9px; border-radius:999px; font-size:11px; font-weight:900; }
   .badge-enfant { background:#1a2f66; border-color:#5277ff; color:#7ab0ff; }
-  .badge-haute, .badge-urgente { background:#661a1a; border-color:#ff5c57; color:#ff9996; }
-  .retard-label { display:inline-flex; width:fit-content; background:#661a1a; border:2px solid #ff5c57; color:#ff9996; padding:4px 9px; border-radius:999px; font-size:11px; font-weight:900; margin-top:6px; }
+  .badge-haute { background:#661a1a; border-color:#ff5c57; color:#ff9996; }
+  .retard-label { display:inline-flex; background:#661a1a; border:2px solid #ff5c57; color:#ff9996; padding:4px 9px; border-radius:999px; font-size:11px; font-weight:900; margin-top:6px; }
   .devoir-actions { display:flex; justify-content:flex-end; gap:8px; border-top:2px dashed #3b4c94; padding-top:10px; }
   .devoir-actions.hidden { display:none; }
   .icon-btn { border:3px solid #0d122b; background:#243475; min-height:40px; padding:7px 14px; border-radius:12px; font-size:13px; font-weight:900; cursor:pointer; color:#fff; box-shadow:0 3px 0 #070a1a; }
-  .icon-btn:active { transform:translateY(2px); box-shadow:none; }
-  .icon-btn.danger { color:#fff; background:#802020; border-color:#0d122b; box-shadow:0 3px 0 #070a1a; }
+  .icon-btn.danger { background:#802020; }
 
   .loading { min-height:190px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; color:var(--muted); font-size:14px; font-weight:800; }
   .loading-spinner { width:28px; height:28px; border:4px solid #3b4c94; border-top-color:#ffd700; border-radius:50%; animation:spin .8s linear infinite; }
@@ -393,127 +409,61 @@
   .tab { 
     background: transparent; border: 0; 
     display: flex; flex-direction: column; align-items: center; justify-content: center; 
-    gap: 2px; color: #8899cb; 
-    flex: 1; 
-    min-height: 58px; padding: 4px 2px; cursor: pointer; border-radius: 14px; font-weight: 900; 
-    max-width: 25%;
-    overflow: hidden;
+    gap: 2px; color: #8899cb; flex: 1; min-height: 58px; padding: 4px 2px; cursor: pointer; border-radius: 14px; font-weight: 900; max-width: 25%;
   }
-  .tab.active { color: #111; background: linear-gradient(180deg, #ffd700, #ff9900); border: 2px solid #0d122b; box-shadow: 0 4px 0 #b35900; text-shadow: none; }
+  .tab.active { color: #111; background: linear-gradient(180deg, #ffd700, #ff9900); border: 2px solid #0d122b; box-shadow: 0 4px 0 #b35900; }
   .tab-icon { font-size: 20px; line-height: 1; }
-  .tab-label { font-size: 10px; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; text-align: center; }
+  .tab-label { font-size: 10px; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
   .btn-fab {
     position:fixed; bottom:calc(var(--nav-height) + 14px + env(safe-area-inset-bottom));
     right:max(14px, calc((100vw - 680px) / 2 + 14px));
     width:62px; height:62px; border-radius:20px; background:linear-gradient(180deg, #ffd700, #ff9900); color:#111;
-    border:4px solid #0d122b; font-size:34px; line-height:1; display:flex; align-items:center; justify-content:center;
+    border:4px solid #0d122b; font-size:34px; display:flex; align-items:center; justify-content:center;
     box-shadow:0 6px 0 #0d122b, 0 9px 18px rgba(0,0,0,.4); z-index:110; cursor:pointer; transform:rotate(-3deg);
   }
   .btn-fab:active { transform:translateY(4px) rotate(-3deg); box-shadow:0 2px 0 #0d122b; }
 
   .modal { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; padding:16px; z-index:200; }
   .modal.hidden { display:none; }
-  .modal-backdrop { position:absolute; inset:0; background:rgba(7,10,26,.8); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); }
-  .modal-content { position:relative; width:min(100%, 430px); max-height:min(88dvh,780px); overflow-y:auto; background:#1c2756; border:4px solid #0d122b; border-radius:24px; padding:16px 20px 20px; box-shadow:0 20px 50px rgba(0,0,0,.5); animation:popIn .18s ease-out; -webkit-overflow-scrolling:touch; }
-  .modal-handle { width:40px; height:5px; border-radius:99px; background:#3b4c94; margin:2px auto 12px; }
+  .modal-backdrop { position:absolute; inset:0; background:rgba(7,10,26,.8); backdrop-filter:blur(4px); }
+  .modal-content { position:relative; width:min(100%, 430px); max-height:min(88dvh,780px); overflow-y:auto; background:#1c2756; border:4px solid #0d122b; border-radius:24px; padding:20px; box-shadow:0 20px 50px rgba(0,0,0,.5); animation:popIn .18s ease-out; }
+  .modal-handle { width:40px; height:5px; border-radius:99px; background:#3b4c94; margin:-4px auto 14px; }
   @keyframes popIn { from{transform:scale(.94); opacity:0} to{transform:scale(1); opacity:1} }
   .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
-  .modal-header h2 { margin:0; font-size:22px; font-weight:900; color:#ffd700; text-shadow: 0 2px 0 #000; }
-  .close { width:42px; height:42px; border:3px solid #0d122b; border-radius:12px; background:#243475; color:#fff; font-size:28px; line-height:1; cursor:pointer; box-shadow:0 3px 0 #070a1a; }
-  .close:active { transform:translateY(2px); box-shadow:none; }
+  .modal-header h2 { margin:0; font-size:20px; font-weight:900; color:#ffd700; text-shadow: 0 2px 0 #000; }
+  .close { width:42px; height:42px; border:3px solid #0d122b; border-radius:12px; background:#243475; color:#fff; font-size:28px; cursor:pointer; box-shadow:0 3px 0 #070a1a; }
 
   form label { display:block; font-weight:900; font-size:12px; color:#cbd5e1; margin-bottom:10px; text-transform: uppercase; }
   form input, form select, form textarea { width:100%; min-height:48px; margin-top:5px; border:3px solid #3b4c94; border-radius:14px; padding:10px 14px; background:#111833; color:var(--text); font-size:16px; font-weight:700; }
   form textarea { resize:vertical; min-height:90px; }
-  form input:focus, form select:focus, form textarea:focus { border-color:#ffd700; outline:none; background:#111833; box-shadow:0 0 0 4px rgba(255,212,59,.2); }
+  form input:focus, form select:focus, form textarea:focus { border-color:#ffd700; outline:none; box-shadow:0 0 0 4px rgba(255,212,59,.2); }
   .form-primary-grid, .form-secondary-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-  .form-primary-grid { margin-bottom:1px; }
   .input-suffix { position:relative; }
   .input-suffix input { padding-right:48px; }
-  .input-suffix span { position:absolute; right:14px; top:50%; transform:translateY(-7%); color:#94a3b8; font-size:13px; pointer-events:none; font-weight:900; }
-  .advanced-toggle { width:100%; min-height:44px; margin:6px 0 10px; padding:10px 14px; background:#243475; border:3px solid #3b4c94; border-radius:14px; display:flex; align-items:center; justify-content:space-between; color:#fff; font-size:13px; font-weight:900; box-shadow:0 3px 0 #070a1a; }
-  .advanced-toggle:active { transform:translateY(2px); box-shadow:none; }
+  .input-suffix span { position:absolute; right:14px; top:50%; transform:translateY(-50%); color:#94a3b8; font-size:13px; font-weight:900; }
+  .advanced-toggle { width:100%; min-height:44px; margin:6px 0 10px; padding:10px 14px; background:#243475; border:3px solid #3b4c94; border-radius:14px; display:flex; align-items:center; justify-content:space-between; color:#fff; font-size:13px; font-weight:900; }
   .advanced-fields.hidden { display:none; }
-  .modal-actions { position:sticky; bottom:calc(-20px - env(safe-area-inset-bottom)); background:#1c2756; margin:6px -20px -20px; padding:12px 20px calc(20px + env(safe-area-inset-bottom)); border-top:3px solid #3b4c94; }
-  .btn-block { width:100%; min-height:54px; background:linear-gradient(180deg, #20bf6b, #108046); color:#fff; border:4px solid #0d122b; padding:11px 14px; border-radius:16px; font-size:18px; font-weight:900; cursor:pointer; box-shadow:0 4px 0 #0d122b; text-shadow:0 2px 0 rgba(0,0,0,.3); }
-  .btn-block:active { transform:translateY(4px); box-shadow:0 0 0 #0d122b; }
-  .btn-block:disabled { background:#475569; border-color:#1e293b; box-shadow:0 3px 0 #0f172a; }
+  .modal-actions { position:sticky; bottom:-20px; background:#1c2756; margin:10px -20px -20px; padding:12px 20px calc(20px + env(safe-area-inset-bottom)); border-top:3px solid #3b4c94; }
+  .btn-block { width:100%; min-height:52px; background:linear-gradient(180deg, #20bf6b, #108046); color:#fff; border:4px solid #0d122b; padding:11px 14px; border-radius:16px; font-size:17px; font-weight:900; cursor:pointer; box-shadow:0 4px 0 #0d122b; }
+  .btn-block:active { transform:translateY(3px); box-shadow:none; }
   .form-error { margin:6px 0 10px; padding:10px 12px; border-radius:12px; background:#661a1a; border:3px solid #ff5c57; color:#ff9996; font-size:13px; font-weight:800; }
-  .toast { position:fixed; top:calc(10px + env(safe-area-inset-top)); left:50%; max-width:calc(100vw - 28px); transform:translateX(-50%); background:#1c2756; color:#ffd700; border:4px solid #0d122b; padding:12px 18px; border-radius:999px; font-size:14px; font-weight:900; z-index:300; box-shadow:0 6px 20px rgba(0,0,0,.5); text-shadow: 0 1px 0 #000; }
+  .toast { position:fixed; top:calc(10px + env(safe-area-inset-top)); left:50%; max-width:calc(100vw - 28px); transform:translateX(-50%); background:#1c2756; color:#ffd700; border:4px solid #0d122b; padding:12px 18px; border-radius:999px; font-size:14px; font-weight:900; z-index:300; box-shadow:0 6px 20px rgba(0,0,0,.5); }
   .hidden { display:none !important; }
 
   @media (min-width:681px) {
     .tabs-bottom { left:50%; right:auto; width:680px; transform:translateX(-50%); border-left:4px solid #0d122b; border-right:4px solid #0d122b; border-radius:20px 20px 0 0; }
   }
-
-  @media (max-width: 680px) {
-    :root { --nav-height: 76px; }
-
-    .app-header h1 { font-size: 26px; }
-    #dateCourante { font-size: 14px; }
-    .enfant-btn { font-size: 16px; min-height: 46px; padding: 10px 18px; }
-    
-    .charge-card { padding: 18px; margin-bottom: 20px; }
-    .charge-number { font-size: 28px; }
-    .charge-detail { font-size: 14px; }
-    
-    .jour-header { margin: 22px 0 12px; }
-    .jour-title { font-size: 16px; padding: 7px 12px; }
-
-    .devoir { padding: 16px; margin-bottom: 14px; gap: 12px; }
-    .devoir-check { width: 44px; height: 44px; font-size: 22px; border-width: 3px; }
-    .devoir-titre { font-size: 18px; }
-    .devoir-description { font-size: 15px; }
-    .devoir-meta { gap: 8px; font-size: 14px; }
-    
-    .badge, .retard-label { font-size: 13px; padding: 5px 9px; }
-    .icon-btn { min-height: 44px; padding: 10px 16px; font-size: 15px; }
-
-    .tabs-bottom { padding-top: 6px; }
-    .tab { min-height: 64px; padding: 8px 1px; gap: 3px; }
-    .tab-icon { font-size: 22px; }
-    .tab-label { font-size: 9px; }
-
-    .btn-fab {
-      width: 66px;
-      height: 66px;
-      right: 18px;
-      bottom: calc(var(--nav-height) + 18px + env(safe-area-inset-bottom));
-      font-size: 36px;
-      border-radius: 20px;
-    }
-
-    .modal-content {
-      width: calc(100% - 24px);
-      max-width: 460px;
-      margin: 0 auto 12px;
-      max-height: 85dvh;
-      border-radius: 24px;
-      padding: 20px;
-    }
-    .modal-header h2 { font-size: 22px; }
-    .close { font-size: 30px; min-width: 44px; min-height: 44px; }
-    
-    form label { font-size: 14px; margin-bottom: 12px; }
-    form input, form select, form textarea { min-height: 50px; padding: 12px; font-size: 16px; }
-    .advanced-toggle { min-height: 48px; font-size: 15px; }
-    .btn-block { min-height: 56px; font-size: 18px; }
-    .toast { font-size: 14px; padding: 12px 16px; }
-  }
   </style>
 </head>
 <body>
   <div id="app">
-
     <header class="app-header">
       <div class="header-copy">
         <h1>⭐ Devoirs Famille</h1>
         <div id="dateCourante"></div>
       </div>
-      <button class="header-refresh" type="button" onclick="rafraichirDonnees()" aria-label="Actualiser">
-        ↻
-      </button>
+      <button class="header-refresh" type="button" onclick="rafraichirDonnees()" aria-label="Actualiser">↻</button>
     </header>
 
     <section class="enfants-bar" aria-label="Filtrer par enfant">
@@ -522,7 +472,6 @@
 
     <main id="contenu-scroll">
       <section id="chargeContainer"></section>
-
       <div id="contenu">
         <div class="loading">
           <div class="loading-spinner" aria-hidden="true"></div>
@@ -531,9 +480,7 @@
       </div>
     </main>
 
-    <button class="btn-fab" onclick="ouvrirFormulaire()" aria-label="Ajouter un devoir" title="Ajouter un devoir">
-      <span aria-hidden="true">+</span>
-    </button>
+    <button class="btn-fab" onclick="ouvrirFormulaire()" aria-label="Ajouter un devoir">+</button>
 
     <nav class="tabs-bottom" aria-label="Navigation principale">
       <button id="tabAujourdHui" class="tab active" type="button" onclick="changerVue('aujourdhui')">
@@ -555,98 +502,77 @@
     </nav>
   </div>
 
+  <!-- MODAL DEVOIR -->
   <div id="modalDevoir" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitre">
     <div class="modal-backdrop" onclick="fermerFormulaire()"></div>
-
     <div class="modal-content">
       <div class="modal-handle" aria-hidden="true"></div>
-
       <div class="modal-header">
         <h2 id="modalTitre">Ajouter un devoir</h2>
         <button class="close" type="button" onclick="fermerFormulaire()" aria-label="Fermer">×</button>
       </div>
-
       <form id="formDevoir" onsubmit="sauvegarderDevoir(event)">
         <input type="hidden" id="formIdDevoir">
-
         <div class="form-primary-grid">
-          <label>
-            Enfant
-            <select id="formEnfant" required></select>
-          </label>
-
-          <label>
-            Matière
-            <select id="formMatiere" required></select>
-          </label>
+          <label>Enfant <select id="formEnfant" required></select></label>
+          <label>Matière <select id="formMatiere" required></select></label>
         </div>
-
-        <label>
-          Titre
-          <input type="text" id="formTitre" required maxlength="200" autocomplete="off" enterkeyhint="next" placeholder="Ex. Exercices p. 42">
-        </label>
-
+        <label>Titre <input type="text" id="formTitre" required maxlength="200" placeholder="Ex. Exercices p. 42"></label>
         <div class="form-secondary-grid">
-          <label>
-            Échéance
-            <input type="date" id="formDate" required>
-          </label>
-
-          <label>
-            Temps
-            <div class="input-suffix">
-              <input type="number" id="formDuree" min="0" step="5" value="20" inputmode="numeric">
-              <span>min</span>
-            </div>
-          </label>
+          <label>Échéance <input type="date" id="formDate" required></label>
+          <label>Temps <div class="input-suffix"><input type="number" id="formDuree" min="0" step="5" value="20"><span>min</span></div></label>
         </div>
-
         <button class="advanced-toggle" id="advancedToggle" type="button" onclick="toggleOptionsAvancees()" aria-expanded="false">
           <span>Plus d’options</span><span id="advancedChevron">⌄</span>
         </button>
-
         <div id="advancedFields" class="advanced-fields hidden">
-          <label>
-            Description
-            <textarea id="formDescription" rows="3" placeholder="Consigne, détail utile…"></textarea>
-          </label>
-
+          <label>Description <textarea id="formDescription" rows="3"></textarea></label>
           <div class="form-secondary-grid">
-            <label>
-              Type
-              <select id="formType" required></select>
-            </label>
-
-            <label>
-              Priorité
-              <select id="formPriorite"></select>
-            </label>
+            <label>Type <select id="formType" required></select></label>
+            <label>Priorité <select id="formPriorite"></select></label>
           </div>
-
           <div class="form-secondary-grid">
-            <label>
-              Étape
-              <input type="number" id="formEtape" min="1" inputmode="numeric">
-            </label>
-
-            <label>
-              Sur
-              <input type="number" id="formNbEtapes" min="1" inputmode="numeric">
-            </label>
+            <label>Étape <input type="number" id="formEtape" min="1"></label>
+            <label>Sur <input type="number" id="formNbEtapes" min="1"></label>
           </div>
-
-          <label>
-            Statut
-            <select id="formStatut"></select>
-          </label>
+          <label>Statut <select id="formStatut"></select></label>
         </div>
-
         <div id="formErreur" class="form-error hidden"></div>
-
         <div class="modal-actions">
           <button type="submit" class="btn btn-primary btn-block" id="btnSauvegarder">Enregistrer</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- MODAL ANIMATION ACHAT -->
+  <div id="modalAchatAide" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-backdrop" onclick="fermerModalAchat()"></div>
+    <div class="modal-content" style="text-align: center; padding: 24px;">
+      <div style="font-size: 50px; margin-bottom: 10px;">🎉</div>
+      <h2 style="color: #ffd700; margin: 0 0 10px; font-weight: 900;">RÉCOMPENSE DÉBLOQUÉE !</h2>
+      <div id="achatTitreRec" style="font-size: 18px; font-weight: 900; color: #fff; margin-bottom: 12px;"></div>
+      <p style="color: #cbd5e1; font-size: 14px; font-weight: 700; margin-bottom: 20px;">
+        La récompense a été ajoutée à ton coffre.
+      </p>
+      <button class="btn-block" type="button" onclick="voirMesRecompenses()">VOIR MES RÉCOMPENSES</button>
+    </div>
+  </div>
+
+  <!-- MODAL CONFIRMATION UTILISATION -->
+  <div id="modalConfirmUtiliser" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-backdrop" onclick="fermerConfirmUtiliser()"></div>
+    <div class="modal-content" style="text-align: center; padding: 24px;">
+      <div style="font-size: 40px; margin-bottom: 8px;">🎁</div>
+      <h2 style="color: #ffd700; margin: 0 0 10px; font-weight: 900;">Utiliser cette récompense ?</h2>
+      <div id="confirmUtiliserTitre" style="font-size: 16px; font-weight: 900; color: #fff; margin-bottom: 8px;"></div>
+      <p style="color: #cbd5e1; font-size: 13px; font-weight: 700; margin-bottom: 20px;">
+        Cette récompense passera dans ton historique.
+      </p>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <button class="icon-btn" type="button" onclick="fermerConfirmUtiliser()">ANNULER</button>
+        <button class="btn-buy" id="btnValiderUtilisation" type="button" onclick="validerUtilisationRecompense()">CONFIRMER</button>
+      </div>
     </div>
   </div>
 
@@ -662,17 +588,20 @@
     let statuts = [];
     let types = [];
     let profils = [];
+    let recompensesEnfant = { aUtiliser: [], utilisees: [], compteurs: { disponibles: 0, utilisees: 0 } };
 
     const catalogueRecompenses = [
-      { id: 1, titre: "30 min de Console / Jeux Vidéo", cout: 100, icone: "🎮", desc: "Du temps de jeu en plus validé par les parents." },
-      { id: 2, titre: "Choisir le film de la soirée en famille", cout: 150, icone: "🍿", desc: "C'est toi qui choisis le film ce soir sur le canapé !" },
-      { id: 3, titre: "1 Glace ou Goûter spécial au choix", cout: 200, icone: "🍨", desc: "Une gourmandise de ton choix pour le goûter." },
-      { id: 4, titre: "Couché repoussé de 30 minutes", cout: 250, icone: "🌙", desc: "Le droit de veiller un peu plus tard un soir de weekend." },
-      { id: 5, titre: "Sortie en tête-à-tête (ciné, jeux, balade)", cout: 400, icone: "🎟️", desc: "Un moment privilégié avec un parent au choix !" }
+      { id: 1, titre: "30 min de Console / Jeux Vidéo", cout: 200, icone: "🎮", desc: "Du temps de jeu en plus validé par les parents." },
+      { id: 2, titre: "Choisir le film de la soirée en famille", cout: 300, icone: "🍿", desc: "C'est toi qui choisis le film ce soir sur le canapé !" },
+      { id: 3, titre: "1 Glace ou Goûter spécial au choix", cout: 500, icone: "🍨", desc: "Une gourmandise de ton choix pour le goûter." },
+      { id: 4, titre: "Couché repoussé de 30 minutes", cout: 600, icone: "🌙", desc: "Le droit de veiller un peu plus tard un soir de weekend." },
+      { id: 5, titre: "Sortie en tête-à-tête (ciné, jeux, balade)", cout: 1000, icone: "🎟️", desc: "Un moment privilégié avec un parent au choix !" }
     ];
 
     let vueActuelle = 'aujourdhui';
     let enfantSelectionne = 'TOUS';
+    let isProcessing = false;
+    let recompenseAUtiliserTarget = null;
 
     function callAPI(action, payload) {
       const dataToSend = Object.assign({ action: action }, payload || {});
@@ -695,8 +624,7 @@
     function afficherDateCourante() {
       const options = { weekday: 'long', day: 'numeric', month: 'long' };
       const date = new Date().toLocaleDateString('fr-FR', options);
-      document.getElementById('dateCourante').innerText =
-        date.charAt(0).toUpperCase() + date.slice(1);
+      document.getElementById('dateCourante').innerText = date.charAt(0).toUpperCase() + date.slice(1);
     }
 
     function rafraichirDonnees() {
@@ -711,7 +639,11 @@
           }
           afficherToast('Données actualisées');
           devoirs = response.data || [];
-          routerAffichage();
+          if (vueActuelle === 'boutique' && enfantSelectionne !== 'TOUS') {
+            chargerSuiviRecompenses();
+          } else {
+            routerAffichage();
+          }
         })
         .catch(err => {
           if (btn) btn.classList.remove('spinning');
@@ -768,7 +700,12 @@
       });
       btnElement.classList.add('active');
       btnElement.setAttribute('aria-pressed', 'true');
-      routerAffichage();
+
+      if (vueActuelle === 'boutique' && id !== 'TOUS') {
+        chargerSuiviRecompenses();
+      } else {
+        routerAffichage();
+      }
     }
 
     function changerVue(vue) {
@@ -780,7 +717,11 @@
       if (vue === 'semaine') document.getElementById('tabSemaine').classList.add('active');
       if (vue === 'boutique') document.getElementById('tabBoutique').classList.add('active');
       
-      routerAffichage();
+      if (vue === 'boutique' && enfantSelectionne !== 'TOUS') {
+        chargerSuiviRecompenses();
+      } else {
+        routerAffichage();
+      }
     }
 
     function routerAffichage() {
@@ -792,6 +733,20 @@
       }
     }
 
+    function chargerSuiviRecompenses() {
+      callAPI('getRecompensesEnfant', { idEnfant: enfantSelectionne })
+        .then(res => {
+          if (res && res.success) {
+            recompensesEnfant = res.data;
+          }
+          routerAffichage();
+        })
+        .catch(err => {
+          afficherErreur(err);
+          routerAffichage();
+        });
+    }
+
     function afficherBoutique() {
       const container = document.getElementById('contenu');
 
@@ -801,7 +756,7 @@
             <div style="font-size: 48px; margin-bottom: 15px;">🎁</div>
             <h2 style="color: #ffd700; margin-bottom: 10px; font-weight: 900;">Boutique XP</h2>
             <p style="color: var(--muted); font-weight: 800; font-size: 15px; line-height: 1.4;">
-              Choisis ton prénom en haut pour voir ton épargne XP et débloquer tes récompenses ! 🚀
+              Choisis ton prénom en haut pour voir ton épargne XP, acheter des récompenses et gérer ton coffre ! 🚀
             </p>
           </div>
         `;
@@ -809,14 +764,10 @@
       }
 
       let p = profils.find(x => String(x.ID_Enfant) === String(enfantSelectionne)) || {
-        XP_Totale: 0,
-        XP_Disponibles: 0,
-        Badges: 0,
-        Niveau_Actuel: 1,
-        Titre_Actuel: "Débutant"
+        XP_Total: 0, XP_Disponibles: 0, Badges: 0, Niveau_Actuel: 1, Titre_Actuel: "Débutant"
       };
 
-      let xpTotale = p.XP_Totale !== undefined ? p.XP_Totale : (p.XP_Total || 0);
+      let xpTotale = p.XP_Total !== undefined ? p.XP_Total : (p.XP_Totale || 0);
       let xpDispo = p.XP_Disponibles !== undefined ? p.XP_Disponibles : (p.XP_Dispo !== undefined ? p.XP_Dispo : xpTotale);
       let nbBadges = p.Badges || 0;
 
@@ -833,7 +784,7 @@
             </div>
             <div style="text-align: right;">
               <div style="font-size: 12px; color: #ffd700; font-weight: 900;">⭐ Total : ${xpTotale} XP</div>
-              <div style="font-size: 11px; color: #cbd5e1; font-weight: 800;">🏆 ${nbBadges} Badge(s)</div>
+              <div style="font-size: 11px; color: #cbd5e1; font-weight: 800;">🏆 Niveau ${p.Niveau_Actuel || 1}</div>
             </div>
           </div>
 
@@ -855,7 +806,10 @@
         </div>
       `;
 
-      let itemsHTML = catalogueRecompenses.map(item => {
+      let itemsCatalogueHTML = `
+        <div class="section-title-bar">🛒 CATALOGUE DES RÉCOMPENSES</div>
+      `;
+      itemsCatalogueHTML += catalogueRecompenses.map(item => {
         const peutAcheter = xpDispo >= item.cout;
         return `
           <div class="shop-card">
@@ -868,39 +822,182 @@
             </div>
             <div class="shop-footer">
               <div class="shop-price">⭐ ${item.cout} XP</div>
-              <button class="btn-buy" ${peutAcheter ? '' : 'disabled'} onclick="acheterRecompense(${item.cout}, '${echapperHTML(item.titre)}')">
-                ${peutAcheter ? 'ÉCHANGER' : 'XP insuffisants'}
+              <button class="btn-buy" ${peutAcheter ? '' : 'disabled'} onclick="commanderRecompense(${item.id})">
+                ${peutAcheter ? 'ACHETER' : 'XP insuffisants'}
               </button>
             </div>
           </div>
         `;
       }).join('');
 
-      container.innerHTML = headerBoutique + itemsHTML;
-    }
+      // Rubrique MES RÉCOMPENSES
+      let mesRecompensesHTML = `
+        <div id="sectionMesRecompenses" class="section-title-bar">🎁 MES RÉCOMPENSES</div>
+        <div class="counters-bar">
+          <span style="color: #ffd700;">🎁 Récompenses disponibles : ${recompensesEnfant.compteurs.disponibles}</span>
+          <span style="color: #20bf6b;">✓ Récompenses utilisées : ${recompensesEnfant.compteurs.utilisees}</span>
+        </div>
+      `;
 
-    function acheterRecompense(cout, titreRecompense) {
-      let p = profils.find(x => String(x.ID_Enfant) === String(enfantSelectionne));
-      if (!p) return;
-
-      let xpDispo = p.XP_Disponibles !== undefined ? p.XP_Disponibles : (p.XP_Dispo !== undefined ? p.XP_Dispo : (p.XP_Totale || p.XP_Total || 0));
-
-      if (xpDispo < cout) {
-        afficherToast("⚠️ Tu n'as pas assez d'XP disponibles !");
-        return;
+      // Categorie À UTILISER
+      mesRecompensesHTML += `<div style="font-size: 13px; font-weight: 900; color: #ffd700; margin: 12px 0 8px; text-transform: uppercase;">À UTILISER</div>`;
+      if (recompensesEnfant.aUtiliser.length === 0) {
+        mesRecompensesHTML += `<div style="text-align:center; padding: 15px; color: var(--muted); font-size: 13px; font-weight: 800;">Aucune récompense en attente d'utilisation.</div>`;
+      } else {
+        mesRecompensesHTML += recompensesEnfant.aUtiliser.map(r => {
+          const itemCat = catalogueRecompenses.find(c => c.id === Number(r.ID_Catalogue)) || { icone: "🎁" };
+          const dAchat = r.Date_Achat ? new Date(r.Date_Achat).toLocaleDateString('fr-FR') : '';
+          return `
+            <div class="rec-card">
+              <div class="shop-item-top">
+                <div class="shop-icon">${itemCat.icone}</div>
+                <div class="shop-info">
+                  <div class="shop-title">${echapperHTML(r.Titre)}</div>
+                  <div class="shop-desc">Obtenue le ${dAchat} (${r.Cout_XP} XP)</div>
+                </div>
+              </div>
+              <div class="shop-footer">
+                <span class="shop-price" style="font-size: 12px; color: #cbd5e1;">Statut : À utiliser</span>
+                <button class="btn-use" onclick="demanderUtiliserRecompense('${r.ID_Recompense}', '${echapperHTML(r.Titre).replace(/'/g, "\\'")}', '${itemCat.icone}')">UTILISER</button>
+              </div>
+            </div>
+          `;
+        }).join('');
       }
 
-      if (confirm(`Veux-tu vraiment échanger ${cout} XP de ton épargne contre : "${titreRecompense}" ?`)) {
-        callAPI('acheterRecompense', { idEnfant: enfantSelectionne, cout: cout, recompense: titreRecompense })
-          .then(response => {
-            if (response && response.success) {
-              afficherToast(`🎉 Récompense débloquée : "${titreRecompense}" !`);
-              chargerDonneesDeReference();
-            } else {
-              afficherToast(response && response.error ? response.error.message : "⚠️ Erreur lors de l'achat.");
+      // Categorie HISTORIQUE
+      mesRecompensesHTML += `<div style="font-size: 13px; font-weight: 900; color: var(--muted); margin: 20px 0 8px; text-transform: uppercase;">HISTORIQUE</div>`;
+      if (recompensesEnfant.utilisees.length === 0) {
+        mesRecompensesHTML += `<div style="text-align:center; padding: 15px; color: var(--muted); font-size: 13px; font-weight: 800;">Aucune récompense dans l'historique.</div>`;
+      } else {
+        mesRecompensesHTML += recompensesEnfant.utilisees.map(r => {
+          const itemCat = catalogueRecompenses.find(c => c.id === Number(r.ID_Catalogue)) || { icone: "🎁" };
+          const dAchat = r.Date_Achat ? new Date(r.Date_Achat).toLocaleDateString('fr-FR') : '';
+          const dUtil = r.Date_Utilisation ? new Date(r.Date_Utilisation).toLocaleDateString('fr-FR') : '';
+          return `
+            <div class="rec-card used">
+              <div class="shop-item-top">
+                <div class="shop-icon">${itemCat.icone}</div>
+                <div class="shop-info">
+                  <div class="shop-title">${echapperHTML(r.Titre)}</div>
+                  <div class="shop-desc">Obtenue le ${dAchat} | Utilisée le ${dUtil}</div>
+                </div>
+              </div>
+              <div class="shop-footer">
+                <span class="badge-used">✓ Utilisée</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      container.innerHTML = headerBoutique + itemsCatalogueHTML + mesRecompensesHTML;
+    }
+
+    function commanderRecompense(idCatalogue) {
+      if (isProcessing) return;
+      isProcessing = true;
+
+      const item = catalogueRecompenses.find(c => c.id === idCatalogue);
+      
+      callAPI('acheterRecompense', { idEnfant: enfantSelectionne, idCatalogue: idCatalogue })
+        .then(res => {
+          isProcessing = false;
+          if (res && res.success) {
+            // Mise à jour locale du profil
+            let p = profils.find(x => String(x.ID_Enfant) === String(enfantSelectionne));
+            if (p) {
+              if (p.XP_Disponibles !== undefined) p.XP_Disponibles = res.data.nouveauSoldeXP;
+              else if (p.XP_Dispo !== undefined) p.XP_Dispo = res.data.nouveauSoldeXP;
+              else p.XP_Total = res.data.nouveauSoldeXP;
             }
-          })
-          .catch(err => afficherErreur(err));
+            
+            // Rechargement du suivi des récompenses
+            chargerSuiviRecompenses();
+
+            // Modale animation
+            document.getElementById('achatTitreRec').innerText = (item ? item.icone + ' ' : '') + (item ? item.titre : '');
+            document.getElementById('modalAchatAide').classList.remove('hidden');
+          } else {
+            const err = res && res.error ? res.error.message : 'ERREUR_SERVEUR';
+            traiterErreurAPI(err);
+          }
+        })
+        .catch(err => {
+          isProcessing = false;
+          afficherErreur(err);
+        });
+    }
+
+    function fermerModalAchat() {
+      document.getElementById('modalAchatAide').classList.add('hidden');
+    }
+
+    function voirMesRecompenses() {
+      fermerModalAchat();
+      const el = document.getElementById('sectionMesRecompenses');
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function demanderUtiliserRecompense(idRecompense, titre, icone) {
+      recompenseAUtiliserTarget = idRecompense;
+      document.getElementById('confirmUtiliserTitre').innerText = icone + " " + titre;
+      document.getElementById('modalConfirmUtiliser').classList.remove('hidden');
+    }
+
+    function fermerConfirmUtiliser() {
+      recompenseAUtiliserTarget = null;
+      document.getElementById('modalConfirmUtiliser').classList.add('hidden');
+    }
+
+    function validerUtilisationRecompense() {
+      if (!recompenseAUtiliserTarget || isProcessing) return;
+      isProcessing = true;
+
+      const btn = document.getElementById('btnValiderUtilisation');
+      btn.disabled = true;
+
+      callAPI('utiliserRecompense', { idEnfant: enfantSelectionne, idRecompense: recompenseAUtiliserTarget })
+        .then(res => {
+          isProcessing = false;
+          btn.disabled = false;
+          fermerConfirmUtiliser();
+
+          if (res && res.success) {
+            afficherToast("🎉 Récompense validée et passée à l'historique !");
+            chargerSuiviRecompenses();
+          } else {
+            const err = res && res.error ? res.error.message : 'ERREUR_SERVEUR';
+            traiterErreurAPI(err);
+          }
+        })
+        .catch(err => {
+          isProcessing = false;
+          btn.disabled = false;
+          fermerConfirmUtiliser();
+          afficherErreur(err);
+        });
+    }
+
+    function traiterErreurAPI(errCode) {
+      switch(errCode) {
+        case 'XP_INSUFFISANTS':
+          afficherToast("⚠️ Tu n'as pas assez d'XP disponibles !");
+          break;
+        case 'RECOMPENSE_INTROUVABLE':
+          afficherToast("⚠️ Récompense introuvable.");
+          break;
+        case 'RECOMPENSE_DEJA_UTILISEE':
+          afficherToast("⚠️ Cette récompense a déjà été utilisée !");
+          break;
+        case 'RECOMPENSE_APPARTIENT_AUTRE_ENFANT':
+          afficherToast("⚠️ Cette récompense appartient à un autre enfant.");
+          break;
+        case 'ENFANT_INTROUVABLE':
+          afficherToast("⚠️ Profil enfant introuvable.");
+          break;
+        default:
+          afficherToast("⚠️ Erreur serveur lors de l'opération.");
       }
     }
 
@@ -958,7 +1055,6 @@
       let html = '';
       let currentGroup = '';
 
-      // Calcul de la date locale au format YYYY-MM-DD (évite le bug UTC)
       const now = new Date();
       const aujourdhuiKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
@@ -1044,8 +1140,6 @@
       if (!container) return;
 
       const totalMin = devoirsFiltres.reduce((sum, d) => sum + Number(d.Duree_Estimee_Min || 0), 0);
-      
-      // Exclut le statut ANNULE du calcul du temps réel accompli
       const estFaitReel = (d) => d.Statut === 'FAIT' || d.Statut === 'TERMINE';
       const faitsMin = devoirsFiltres
         .filter(d => estFaitReel(d))
@@ -1113,28 +1207,12 @@
 
               let profilLocal = profils.find(x => String(x.ID_Enfant) === String(enfantSelectionne));
               if (profilLocal) {
-                profilLocal.XP_Totale = gami.nouveauXPTotal;
-                if (profilLocal.XP_Disponibles !== undefined) {
-                  profilLocal.XP_Disponibles += gami.xpGagnes;
-                } else {
-                  profilLocal.XP_Disponibles = (profilLocal.XP_Disponibles || gami.nouveauXPTotal);
-                }
+                profilLocal.XP_Total = gami.nouveauXPTotal;
+                if (profilLocal.XP_Disponibles !== undefined) profilLocal.XP_Disponibles += gami.xpGagnes;
                 profilLocal.Niveau_Actuel = gami.niveau;
-                profilLocal.Titre_Actuel = gami.titre;
               }
 
-              let messageToast = nouveauStatut === 'FAIT' 
-                ? `🎉 Validé ! +${gami.xpGagnes} XP` 
-                : 'Devoir remis à faire';
-
-              if (gami.raisonsXP && gami.raisonsXP.length > 0) {
-                messageToast += ` (${gami.raisonsXP.join(', ')})`;
-              }
-
-              if (gami.levelUp) {
-                alert(`⭐ NIVEAU SUPÉRIEUR ! ⭐\n\nBravo ! Passage au niveau ${gami.niveau} : "${gami.titre}" ! 🚀`);
-              }
-
+              let messageToast = nouveauStatut === 'FAIT' ? `🎉 Validé ! +${gami.xpGagnes} XP` : 'Devoir remis à faire';
               afficherToast(messageToast);
             } else {
               afficherToast(nouveauStatut === 'FAIT' ? 'Devoir validé ! 🎉' : 'Devoir remis à faire');
@@ -1207,9 +1285,7 @@
       document.body.classList.add('modal-open');
     }
 
-    function editerDevoir(idDevoir) {
-      ouvrirFormulaire(idDevoir);
-    }
+    function editerDevoir(idDevoir) { ouvrirFormulaire(idDevoir); }
 
     function fermerFormulaire() {
       const modal = document.getElementById('modalDevoir');
