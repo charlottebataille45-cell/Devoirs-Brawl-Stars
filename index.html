@@ -582,6 +582,7 @@
 
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbwSBdQHLeLF_sGy0dVq3gtFPHIm2saKyYb2DMTidzVCXPXIdVoI1LY87mC0U8M6HhKb/exec";
+    const GITHUB_RECOMPENSES_URL = "https://raw.githubusercontent.com/charlottebataille45-cell/Devoirs-Brawl-Stars/main/catalogueRecompenses.json";
 
     let devoirs = [];
     let enfants = [];
@@ -591,14 +592,7 @@
     let types = [];
     let profils = [];
     let recompensesEnfant = { aUtiliser: [], utilisees: [], compteurs: { disponibles: 0, utilisees: 0 } };
-
-    const catalogueRecompenses = [
-      { id: 1, titre: "30 min de Console / Jeux Vidéo", cout: 200, icone: "🎮", desc: "Du temps de jeu en plus validé par les parents." },
-      { id: 2, titre: "Choisir le film de la soirée en famille", cout: 300, icone: "🍿", desc: "C'est toi qui choisis le film ce soir sur le canapé !" },
-      { id: 3, titre: "1 Glace ou Goûter spécial au choix", cout: 500, icone: "🍨", desc: "Une gourmandise de ton choix pour le goûter." },
-      { id: 4, titre: "Couché repoussé de 30 minutes", cout: 600, icone: "🌙", desc: "Le droit de veiller un peu plus tard un soir de weekend." },
-      { id: 5, titre: "Sortie en tête-à-tête (ciné, jeux, balade)", cout: 1000, icone: "🎟️", desc: "Un moment privilégié avec un parent au choix !" }
-    ];
+    let catalogueRecompenses = [];
 
     let vueActuelle = 'aujourdhui';
     let enfantSelectionne = 'TOUS';
@@ -620,8 +614,23 @@
       });
     }
 
+    function chargerCatalogueGitHub() {
+      return fetch(GITHUB_RECOMPENSES_URL)
+        .then(res => {
+          if (!res.ok) throw new Error("Erreur de chargement du catalogue GitHub");
+          return res.json();
+        })
+        .then(data => {
+          catalogueRecompenses = data || [];
+        })
+        .catch(err => {
+          console.error("Erreur catalogue GitHub:", err);
+        });
+    }
+
     document.addEventListener("DOMContentLoaded", function() {
       afficherDateCourante();
+      chargerCatalogueGitHub();
       chargerDonneesDeReference();
     });
 
@@ -880,7 +889,7 @@
       let xpTotale = p.XP_Total !== undefined ? p.XP_Total : (p.XP_Totale || 0);
       let xpDispo = p.XP_Disponibles !== undefined ? p.XP_Disponibles : (p.XP_Dispo !== undefined ? p.XP_Dispo : xpTotale);
 
-      let prochainObjectif = catalogueRecompenses.find(item => item.cout > xpDispo) || catalogueRecompenses[catalogueRecompenses.length - 1];
+      let prochainObjectif = catalogueRecompenses.find(item => item.cout > xpDispo) || catalogueRecompenses[catalogueRecompenses.length - 1] || { cout: 100, icone: "🎁", titre: "Récompense" };
       let pourcentageObj = Math.min(100, Math.round((xpDispo / prochainObjectif.cout) * 100));
       let resteXP = Math.max(0, prochainObjectif.cout - xpDispo);
 
