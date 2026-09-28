@@ -1,41 +1,41 @@
 {
   "enfants": [
-    { "id": "ENF01", "prenom": "Matys", "niveau": "Seconde", "actif": true },
-    { "id": "ENF02", "prenom": "Andreas", "niveau": "Cinquième", "actif": true }
+    { "ID_Enfant": "ENF01", "Prenom": "Matys", "Niveau": "Troisième", "Actif": true },
+    { "ID_Enfant": "ENF02", "Prenom": "Andreas", "Niveau": "Cinquième", "Actif": true }
   ],
   "matieres": [
-    { "id": "MAT01", "nom": "Mathématiques", "code": "MATH", "icone": "📐", "actif": true },
-    { "id": "MAT02", "nom": "Français", "code": "FR", "icone": "📖", "actif": true },
-    { "id": "MAT03", "nom": "Histoire-Géographie / EMC", "code": "HGEMC", "icone": "📖", "actif": true },
-    { "id": "MAT04", "nom": "Physique-Chimie", "code": "PC", "icone": "🧪", "actif": true },
-    { "id": "MAT05", "nom": "Espagnol LV2", "code": "ESP", "icone": "🇪🇸", "actif": true },
-    { "id": "MAT06", "nom": "Éducation musicale", "code": "MUS", "icone": "🎵", "actif": true },
-    { "id": "MAT07", "nom": "Anglais", "code": "ANG", "icone": "🇬🇧", "actif": true },
-    { "id": "MAT08", "nom": "SVT", "code": "SVT", "icone": "🌱", "actif": true },
-    { "id": "MAT09", "nom": "EMC", "code": "EMC", "icone": "⚖️", "actif": true },
-    { "id": "MAT10", "nom": "Technologie", "code": "TECH", "icone": "⚙️", "actif": true },
-    { "id": "MAT11", "nom": "Arts plastiques", "code": "ART", "icone": "🎨", "actif": true }
+    { "ID_Matiere": "MAT01", "Matiere": "Mathématiques", "Code": "MATH", "Icone": "📐", "Actif": true },
+    { "ID_Matiere": "MAT02", "Matiere": "Français", "Code": "FR", "Icone": "📖", "Actif": true },
+    { "ID_Matiere": "MAT03", "Matiere": "Histoire-Géographie / EMC", "Code": "HGEMC", "Icone": "📖", "Actif": true },
+    { "ID_Matiere": "MAT04", "Matiere": "Physique-Chimie", "Code": "PC", "Icone": "🧪", "Actif": true },
+    { "ID_Matiere": "MAT05", "Matiere": "Espagnol LV2", "Code": "ESP", "Icone": "🇪🇸", "Actif": true },
+    { "ID_Matiere": "MAT06", "Matiere": "Éducation musicale", "Code": "MUS", "Icone": "🎵", "Actif": true },
+    { "ID_Matiere": "MAT07", "Matiere": "Anglais", "Code": "ANG", "Icone": "🇬🇧", "Actif": true },
+    { "ID_Matiere": "MAT08", "Matiere": "SVT", "Code": "SVT", "Icone": "🌱", "Actif": true },
+    { "ID_Matiere": "MAT09", "Matiere": "EMC", "Code": "EMC", "Icone": "⚖️", "Actif": true },
+    { "ID_Matiere": "MAT10", "Matiere": "Technologie", "Code": "TECH", "Icone": "⚙️", "Actif": true },
+    { "ID_Matiere": "MAT11", "Matiere": "Arts plastiques", "Code": "ART", "Icone": "🎨", "Actif": true }
   ],
   "statuts": [
-    { "code": "A_FAIRE", "libelle": "À faire", "ordre": 1 },
-    { "code": "EN_COURS", "libelle": "En cours", "ordre": 2 },
-    { "code": "FAIT", "libelle": "Fait", "ordre": 3 },
-    { "code": "REPORTE", "libelle": "Reporté", "ordre": 4 },
-    { "code": "ANNULE", "libelle": "Annulé", "ordre": 5 }
+    { "Code": "A_FAIRE", "Libelle": "À faire", "Ordre": 1 },
+    { "Code": "EN_COURS", "Libelle": "En cours", "Ordre": 2 },
+    { "Code": "FAIT", "Libelle": "Fait", "Ordre": 3 },
+    { "Code": "REPORTE", "Libelle": "Reporté", "Ordre": 4 },
+    { "Code": "ANNULE", "Libelle": "Annulé", "Ordre": 5 }
   ],
   "priorites": [
-    { "code": "NORMALE", "libelle": "Normale", "ordre": 1 },
-    { "code": "HAUTE", "libelle": "Haute", "ordre": 2 },
-    { "code": "URGENTE", "libelle": "Urgente", "ordre": 3 }
+    { "Code": "NORMALE", "Libelle": "Normale", "Ordre": 1 },
+    { "Code": "HAUTE", "Libelle": "Haute", "Ordre": 2 },
+    { "Code": "URGENTE", "Libelle": "Urgente", "Ordre": 3 }
   ],
   "types": [
-    { "code": "DEVOIR", "libelle": "Devoir" },
-    { "code": "REVISION", "libelle": "Révision" },
-    { "code": "LECTURE", "libelle": "Lecture" },
-    { "code": "PROJET", "libelle": "Projet" },
-    { "code": "MATERIEL", "libelle": "Matériel" },
-    { "code": "EVALUATION", "libelle": "Évaluation" },
-    { "code": "EXERCICE", "libelle": "Exercice" }
+    { "Code": "DEVOIR", "Libelle": "Devoir" },
+    { "Code": "REVISION", "Libelle": "Révision" },
+    { "Code": "LECTURE", "Libelle": "Lecture" },
+    { "Code": "PROJET", "Libelle": "Projet" },
+    { "Code": "MATERIEL", "Libelle": "Matériel" },
+    { "Code": "EVALUATION", "Libelle": "Évaluation" },
+    { "Code": "EXERCICE", "Libelle": "Exercice" }
   ],
   "catalogue": [
     { "id": 1, "titre": "30 min de Console / Jeux Vidéo", "cout": 200, "icone": "🎮", "desc": "Du temps de jeu en plus validé par les parents." },
