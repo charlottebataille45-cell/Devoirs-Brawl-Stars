@@ -580,9 +580,8 @@
 
   <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
-<script>
+  <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbwSBdQHLeLF_sGy0dVq3gtFPHIm2saKyYb2DMTidzVCXPXIdVoI1LY87mC0U8M6HhKb/exec";
-  // Chemins possibles selon le mode d'hébergement
     const REFERENTIELS_PATHS = [
       "data/referentiels.json",
       "./data/referentiels.json",
@@ -618,9 +617,6 @@
         return res.json();
       });
     }
-
-// Chemins possibles selon le mode d'hébergement
-    const REFERENTIELS_URL = "data/referentiels.json";
 
     async function chargerReferentielsLocaux() {
       let data = null;
@@ -781,7 +777,6 @@
       }
     }
 
-    /* TIMELINE HEBDOMADAIRE JS */
     function getLundi(d) {
       const date = new Date(d);
       const day = date.getDay();
