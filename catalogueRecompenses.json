@@ -1,0 +1,37 @@
+[
+  {
+    "id": 1,
+    "titre": "30 min de Console / Jeux Vidéo",
+    "cout": 200,
+    "icone": "🎮",
+    "desc": "Du temps de jeu en plus validé par les parents."
+  },
+  {
+    "id": 2,
+    "titre": "Choisir le film de la soirée en famille",
+    "cout": 300,
+    "icone": "🍿",
+    "desc": "C'est toi qui choisis le film ce soir sur le canapé !"
+  },
+  {
+    "id": 3,
+    "titre": "1 Glace ou Goûter spécial au choix",
+    "cout": 500,
+    "icone": "🍨",
+    "desc": "Une gourmandise de ton choix pour le goûter."
+  },
+  {
+    "id": 4,
+    "titre": "Couché repoussé de 30 minutes",
+    "cout": 600,
+    "icone": "🌙",
+    "desc": "Le droit de veiller un peu plus tard un soir de weekend."
+  },
+  {
+    "id": 5,
+    "titre": "Sortie en tête-à-tête (ciné, jeux, balade)",
+    "cout": 1000,
+    "icone": "🎟️",
+    "desc": "Un moment privilégié avec un parent au choix !"
+  }
+]
