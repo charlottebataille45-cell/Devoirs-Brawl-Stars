@@ -620,11 +620,7 @@
     }
 
 // Chemins possibles selon le mode d'hébergement
-    const REFERENTIELS_PATHS = [
-      "data/referentiels.json",
-      "./data/referentiels.json",
-      "public/data/referentiels.json"
-    ];
+    const REFERENTIELS_URL = "data/referentiels.json";
 
     async function chargerReferentielsLocaux() {
       let data = null;
