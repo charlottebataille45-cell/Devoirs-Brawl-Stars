@@ -119,11 +119,10 @@
   @keyframes spin { to { transform: rotate(360deg); } }
 
   .enfants-bar {
-    padding: 10px 12px 9px;
+    padding: 10px 12px 6px;
     background: rgba(17,24,51,.95);
     flex-shrink: 0;
     z-index: 20;
-    border-bottom: 2px solid rgba(255,255,255,.05);
   }
   .enfants-scroll {
     display: flex;
@@ -158,7 +157,84 @@
     text-shadow: none;
     transform: translateY(-1px);
   }
-  .enfant-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #0f1638; }
+
+  /* TIMELINE HEBDOMADAIRE */
+  .timeline-container {
+    background: rgba(17,24,51,.98);
+    border-bottom: 3px solid #0d122b;
+    padding: 8px 12px 10px;
+    flex-shrink: 0;
+    z-index: 15;
+  }
+  .timeline-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .timeline-title {
+    font-size: 12px;
+    font-weight: 900;
+    color: #ffd700;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+  }
+  .timeline-nav-btn {
+    background: #243475;
+    border: 2px solid #0d122b;
+    color: #fff;
+    border-radius: 8px;
+    padding: 2px 10px;
+    font-size: 11px;
+    font-weight: 900;
+    cursor: pointer;
+    box-shadow: 0 2px 0 #070a1a;
+  }
+  .timeline-nav-btn:active { transform: translateY(1px); box-shadow: none; }
+  .timeline-days {
+    display: flex;
+    gap: 4px;
+    justify-content: space-between;
+  }
+  .day-card {
+    flex: 1;
+    background: #1c2756;
+    border: 2px solid #3b4c94;
+    border-radius: 12px;
+    padding: 6px 2px;
+    text-align: center;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+  }
+  .day-card.today {
+    border-color: #ffd700;
+    background: linear-gradient(180deg, #283777, #1c2756);
+  }
+  .day-card.selected {
+    background: linear-gradient(180deg, #ffd700, #ff8c00) !important;
+    color: #111 !important;
+    border-color: #fff !important;
+  }
+  .day-name { font-size: 10px; font-weight: 900; text-transform: uppercase; opacity: 0.85; }
+  .day-num { font-size: 14px; font-weight: 900; margin: 1px 0; }
+  .day-card.selected .day-name, .day-card.selected .day-num { color: #111; opacity: 1; }
+  .day-dot {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: #0d122b;
+    color: #94a3b8;
+    font-size: 9px;
+    font-weight: 900;
+    display: grid;
+    place-items: center;
+    margin-top: 2px;
+  }
+  .day-dot.has-tasks { background: #ff5c57; color: #fff; }
+  .day-card.selected .day-dot { background: #111; color: #ffd700; }
 
   #contenu-scroll {
     flex: 1;
@@ -185,18 +261,8 @@
     top: 0; left: 0; right: 0; height: 6px;
     background: linear-gradient(90deg, #ffd700, #ff3366, #00f2fe);
   }
-  .profil-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-  }
-  .profil-titre-niveau {
-    font-size: 18px;
-    font-weight: 900;
-    color: #ffd700;
-    text-shadow: 0 2px 0 #000;
-  }
+  .profil-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .profil-titre-niveau { font-size: 18px; font-weight: 900; color: #ffd700; text-shadow: 0 2px 0 #000; }
   .brawl-level-badge {
     background: linear-gradient(180deg, #00f2fe, #0077b3);
     color: #fff;
@@ -210,115 +276,61 @@
   }
 
   .section-title-bar {
-    font-weight: 900;
-    font-size: 16px;
-    color: #111;
+    font-weight: 900; font-size: 16px; color: #111;
     background: linear-gradient(180deg, #ffd700, #ff9900);
-    border: 3px solid #000;
-    border-radius: 12px;
-    padding: 6px 12px;
-    margin: 16px 0 12px;
-    box-shadow: 0 3px 0 #b35900;
-    text-transform: uppercase;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    border: 3px solid #000; border-radius: 12px;
+    padding: 6px 12px; margin: 16px 0 12px;
+    box-shadow: 0 3px 0 #b35900; text-transform: uppercase;
+    display: flex; justify-content: space-between; align-items: center;
   }
 
   .counters-bar {
-    background: rgba(0,0,0,0.4);
-    border: 3px solid #3b4c94;
-    border-radius: 14px;
-    padding: 10px 14px;
-    margin-bottom: 14px;
-    display: flex;
-    justify-content: space-between;
-    font-size: 13px;
-    font-weight: 900;
+    background: rgba(0,0,0,0.4); border: 3px solid #3b4c94;
+    border-radius: 14px; padding: 10px 14px; margin-bottom: 14px;
+    display: flex; justify-content: space-between; font-size: 13px; font-weight: 900;
   }
 
   .shop-card, .rec-card {
     background: linear-gradient(135deg, #1c2756 0%, #2a1b4e 100%);
-    border: 4px solid #0d122b;
-    border-radius: 20px;
-    padding: 16px;
-    margin-bottom: 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    border: 4px solid #0d122b; border-radius: 20px;
+    padding: 16px; margin-bottom: 14px;
+    display: flex; flex-direction: column; gap: 10px;
     box-shadow: 0 6px 0 #070a1a;
   }
-  .rec-card.used {
-    opacity: 0.65;
-    background: linear-gradient(135deg, #121936 0%, #1a152e 100%);
-  }
+  .rec-card.used { opacity: 0.65; background: linear-gradient(135deg, #121936 0%, #1a152e 100%); }
 
   .shop-item-top { display: flex; align-items: flex-start; gap: 12px; }
   .shop-icon {
-    width: 50px; height: 50px;
-    background: rgba(0,0,0,0.4);
-    border: 3px solid #3b4c94;
-    border-radius: 14px;
-    display: grid;
-    place-items: center;
-    font-size: 26px;
-    flex-shrink: 0;
+    width: 50px; height: 50px; background: rgba(0,0,0,0.4);
+    border: 3px solid #3b4c94; border-radius: 14px;
+    display: grid; place-items: center; font-size: 26px; flex-shrink: 0;
   }
   .shop-info { flex: 1; min-width: 0; }
   .shop-title { font-size: 16px; font-weight: 900; color: #fff; text-shadow: 0 1px 0 #000; margin: 0; }
   .shop-desc { font-size: 12px; color: #cbd5e1; font-weight: 700; margin-top: 4px; line-height: 1.35; }
-  .shop-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-top: 2px dashed #3b4c94;
-    padding-top: 10px;
-    margin-top: 2px;
-  }
+  .shop-footer { display: flex; justify-content: space-between; align-items: center; border-top: 2px dashed #3b4c94; padding-top: 10px; margin-top: 2px; }
   .shop-price { font-size: 15px; font-weight: 900; color: #ffd700; text-shadow: 0 1px 0 #000; }
 
   .btn-buy, .btn-use {
-    background: linear-gradient(180deg, #20bf6b, #108046);
-    color: #fff;
-    border: 3px solid #0d122b;
-    border-radius: 12px;
-    padding: 8px 16px;
-    font-weight: 900;
-    font-size: 13px;
-    cursor: pointer;
-    box-shadow: 0 3px 0 #070a1a;
-    text-shadow: 0 1px 0 rgba(0,0,0,0.3);
+    background: linear-gradient(180deg, #20bf6b, #108046); color: #fff;
+    border: 3px solid #0d122b; border-radius: 12px; padding: 8px 16px;
+    font-weight: 900; font-size: 13px; cursor: pointer;
+    box-shadow: 0 3px 0 #070a1a; text-shadow: 0 1px 0 rgba(0,0,0,0.3);
   }
   .btn-buy:active, .btn-use:active { transform: translateY(2px); box-shadow: 0 1px 0 #070a1a; }
   .btn-buy:disabled, .btn-use:disabled { background: #475569; border-color: #1e293b; box-shadow: 0 2px 0 #0f172a; opacity: 0.7; cursor: not-allowed; }
 
-  .badge-used {
-    background: #20bf6b;
-    color: #fff;
-    border: 2px solid #0d122b;
-    padding: 4px 10px;
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: 900;
-  }
+  .badge-used { background: #20bf6b; color: #fff; border: 2px solid #0d122b; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 900; }
 
   .charge-card {
-    position: relative;
-    overflow: hidden;
+    position: relative; overflow: hidden;
     background: linear-gradient(135deg, #1c2756 0%, #162044 100%);
-    border: 4px solid #0d122b;
-    border-radius: 20px;
-    padding: 16px;
-    margin: 4px 0 16px;
-    box-shadow: 0 6px 0 #070a1a;
+    border: 4px solid #0d122b; border-radius: 20px;
+    padding: 16px; margin: 4px 0 16px; box-shadow: 0 6px 0 #070a1a;
   }
   .charge-card::after {
-    content: "★";
-    position: absolute; right: 12px; top: 8px;
-    color: rgba(255,212,59,.9);
-    font-size: 34px;
-    text-shadow: 0 2px 0 #000;
-    transform: rotate(12deg);
+    content: "★"; position: absolute; right: 12px; top: 8px;
+    color: rgba(255,212,59,.9); font-size: 34px; text-shadow: 0 2px 0 #000; transform: rotate(12deg);
   }
   .charge-card > div:first-child { display:flex; align-items:center; gap:12px; }
   .charge-number { font-size: 26px; font-weight: 900; color: #ffd700; text-shadow: 0 2px 0 #000; }
@@ -326,51 +338,31 @@
   .progress { height: 14px; background:#0d122b; border-radius:99px; margin-top:12px; overflow:hidden; border:3px solid #3b4c94; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5); }
   .progress-bar { height:100%; background:linear-gradient(90deg,#00f2fe,#4facfe); transition:width .3s ease; box-shadow: 0 0 10px #00f2fe; }
 
-  .jour-header { display:flex; align-items:center; margin:18px 3px 9px; }
+  .jour-header { display:flex; align-items:center; margin:18px 3px 9px; scroll-margin-top: 10px; }
   .jour-title {
-    font-weight: 900;
-    font-size: 15px;
-    color: #111;
+    font-weight: 900; font-size: 15px; color: #111;
     background: linear-gradient(180deg, #ffd700, #ff9900);
-    border: 3px solid #000;
-    border-radius: 12px;
-    padding: 6px 12px;
-    box-shadow: 0 3px 0 #b35900;
-    text-transform: uppercase;
+    border: 3px solid #000; border-radius: 12px; padding: 6px 12px;
+    box-shadow: 0 3px 0 #b35900; text-transform: uppercase;
   }
 
   .devoir {
-    position: relative;
-    background: #1c2756;
-    border: 4px solid #0d122b;
-    border-radius: var(--radius);
-    padding: 14px;
-    margin-bottom: 12px;
-    display:flex;
-    flex-direction:column;
-    gap:10px;
+    position: relative; background: #1c2756;
+    border: 4px solid #0d122b; border-radius: var(--radius);
+    padding: 14px; margin-bottom: 12px; display:flex; flex-direction:column; gap:10px;
     box-shadow: 0 6px 0 #070a1a;
   }
   .devoir::before {
-    content:"";
-    position:absolute; left:-4px; top:-4px; bottom:-4px;
-    width:10px;
-    background:var(--blue);
-    border-radius: 16px 0 0 16px;
-    border-right: 2px solid #0d122b;
+    content:""; position:absolute; left:-4px; top:-4px; bottom:-4px; width:10px;
+    background:var(--blue); border-radius: 16px 0 0 16px; border-right: 2px solid #0d122b;
   }
   .devoir.en-retard::before { background: var(--red); }
   .devoir-top { display:flex; gap:12px; align-items:flex-start; }
   .devoir-check {
-    width: 42px; height: 42px;
-    flex-shrink:0;
-    border:3px solid #0d122b;
-    border-radius:50%;
+    width: 42px; height: 42px; flex-shrink:0; border:3px solid #0d122b; border-radius:50%;
     background: linear-gradient(180deg, #324796, #1c2756);
     display:flex; align-items:center; justify-content:center;
-    cursor:pointer;
-    font-size:20px; font-weight:900; color:#fff;
-    box-shadow: 0 4px 0 #070a1a;
+    cursor:pointer; font-size:20px; font-weight:900; color:#fff; box-shadow: 0 4px 0 #070a1a;
   }
   .devoir-check:active { transform:translateY(2px); box-shadow:0 1px 0 #070a1a; }
   .devoir.fait .devoir-check { background: linear-gradient(180deg, #20bf6b, #108046); }
@@ -468,6 +460,16 @@
 
     <section class="enfants-bar" aria-label="Filtrer par enfant">
       <div id="listeEnfants" class="enfants-scroll"></div>
+    </section>
+
+    <!-- TIMELINE HEBDOMADAIRE -->
+    <section id="timelineSemaine" class="timeline-container" aria-label="Planning de la semaine">
+      <div class="timeline-header">
+        <button class="timeline-nav-btn" type="button" onclick="changerSemaine(-1)">◀ Préc.</button>
+        <span id="timelineTitle" class="timeline-title">Semaine</span>
+        <button class="timeline-nav-btn" type="button" onclick="changerSemaine(1)">Suiv. ▶</button>
+      </div>
+      <div id="timelineDays" class="timeline-days"></div>
     </section>
 
     <main id="contenu-scroll">
@@ -602,6 +604,8 @@
     let enfantSelectionne = 'TOUS';
     let isProcessing = false;
     let recompenseAUtiliserTarget = null;
+    let offsetSemaine = 0;
+    let jourFiltreKey = null;
 
     function callAPI(action, payload) {
       const dataToSend = Object.assign({ action: action }, payload || {});
@@ -717,6 +721,13 @@
       if (vue === 'recompenses') document.getElementById('tabRecompenses').classList.add('active');
       if (vue === 'boutique') document.getElementById('tabBoutique').classList.add('active');
       
+      const timelineEl = document.getElementById('timelineSemaine');
+      if (vue === 'boutique' || vue === 'recompenses') {
+        timelineEl.classList.add('hidden');
+      } else {
+        timelineEl.classList.remove('hidden');
+      }
+
       if ((vue === 'boutique' || vue === 'recompenses') && enfantSelectionne !== 'TOUS') {
         chargerSuiviRecompenses();
       } else {
@@ -725,15 +736,111 @@
     }
 
     function routerAffichage() {
+      const timelineEl = document.getElementById('timelineSemaine');
+
       if (vueActuelle === 'boutique') {
+        timelineEl.classList.add('hidden');
         document.getElementById('chargeContainer').innerHTML = '';
         afficherBoutique();
       } else if (vueActuelle === 'recompenses') {
+        timelineEl.classList.add('hidden');
         document.getElementById('chargeContainer').innerHTML = '';
         afficherMesRecompenses();
       } else {
+        timelineEl.classList.remove('hidden');
+        actualiserTimeline();
         afficherDevoirs();
       }
+    }
+
+    /* TIMELINE HEBDOMADAIRE JS */
+    function getLundi(d) {
+      const date = new Date(d);
+      const day = date.getDay();
+      const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+      return new Date(date.setDate(diff));
+    }
+
+    function changerSemaine(delta) {
+      offsetSemaine += delta;
+      jourFiltreKey = null;
+      actualiserTimeline();
+      afficherDevoirs();
+    }
+
+    function filtrerJourTimeline(dateIso) {
+      if (jourFiltreKey === dateIso) {
+        jourFiltreKey = null;
+      } else {
+        jourFiltreKey = dateIso;
+      }
+      actualiserTimeline();
+
+      if (vueActuelle === 'aujourdhui') {
+        changerVue('tous');
+      } else {
+        afficherDevoirs();
+      }
+
+      if (jourFiltreKey) {
+        setTimeout(() => {
+          const targetAncre = document.getElementById('group-' + jourFiltreKey);
+          if (targetAncre) {
+            targetAncre.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 100);
+      }
+    }
+
+    function actualiserTimeline() {
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      const todayKey = today.toISOString().split('T')[0];
+
+      let refDate = new Date();
+      refDate.setDate(refDate.getDate() + (offsetSemaine * 7));
+      const lundi = getLundi(refDate);
+
+      const devoirsFiltresEnfant = devoirs.filter(d => enfantSelectionne === 'TOUS' || d.ID_Enfant === enfantSelectionne);
+
+      const daysContainer = document.getElementById('timelineDays');
+      const titleEl = document.getElementById('timelineTitle');
+
+      const dim = new Date(lundi);
+      dim.setDate(lundi.getDate() + 6);
+      
+      const formatMois = (d) => d.toLocaleDateString('fr-FR', { month: 'short', day: 'numeric' });
+      titleEl.innerText = `${formatMois(lundi)} - ${formatMois(dim)}`;
+
+      let daysHTML = '';
+      const nomJours = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+
+      for (let i = 0; i < 7; i++) {
+        let cur = new Date(lundi);
+        cur.setDate(lundi.getDate() + i);
+        cur.setHours(0,0,0,0);
+        
+        let curKey = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}-${String(cur.getDate()).padStart(2, '0')}`;
+
+        let count = devoirsFiltresEnfant.filter(d => {
+          if (!d.Date_Echeance) return false;
+          let dKey = d.Date_Echeance.split('T')[0];
+          return dKey === curKey && d.Statut !== 'FAIT' && d.Statut !== 'ANNULE' && d.Statut !== 'TERMINE';
+        }).length;
+
+        let isToday = curKey === todayKey;
+        let isSelected = curKey === jourFiltreKey;
+
+        daysHTML += `
+          <div class="day-card ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}" onclick="filtrerJourTimeline('${curKey}')">
+            <span class="day-name">${nomJours[i]}</span>
+            <span class="day-num">${cur.getDate()}</span>
+            <span class="day-dot ${count > 0 ? 'has-tasks' : ''}">${count}</span>
+          </div>
+        `;
+      }
+
+      daysContainer.innerHTML = daysHTML;
     }
 
     function chargerSuiviRecompenses() {
@@ -808,9 +915,7 @@
         </div>
       `;
 
-      let itemsCatalogueHTML = `
-        <div class="section-title-bar">🛒 CATALOGUE DES RÉCOMPENSES</div>
-      `;
+      let itemsCatalogueHTML = `<div class="section-title-bar">🛒 CATALOGUE DES RÉCOMPENSES</div>`;
       itemsCatalogueHTML += catalogueRecompenses.map(item => {
         const peutAcheter = xpDispo >= item.cout;
         return `
@@ -859,7 +964,6 @@
         </div>
       `;
 
-      // Categorie À UTILISER
       mesRecompensesHTML += `<div style="font-size: 13px; font-weight: 900; color: #ffd700; margin: 12px 0 8px; text-transform: uppercase;">À UTILISER</div>`;
       if (recompensesEnfant.aUtiliser.length === 0) {
         mesRecompensesHTML += `<div style="text-align:center; padding: 20px; color: var(--muted); font-size: 13px; font-weight: 800;">Aucune récompense en attente d'utilisation.</div>`;
@@ -885,7 +989,6 @@
         }).join('');
       }
 
-      // Categorie HISTORIQUE
       mesRecompensesHTML += `<div style="font-size: 13px; font-weight: 900; color: var(--muted); margin: 20px 0 8px; text-transform: uppercase;">HISTORIQUE</div>`;
       if (recompensesEnfant.utilisees.length === 0) {
         mesRecompensesHTML += `<div style="text-align:center; padding: 20px; color: var(--muted); font-size: 13px; font-weight: 800;">Aucune récompense dans l'historique.</div>`;
@@ -997,23 +1100,12 @@
 
     function traiterErreurAPI(errCode) {
       switch(errCode) {
-        case 'XP_INSUFFISANTS':
-          afficherToast("⚠️ Tu n'as pas assez d'XP disponibles !");
-          break;
-        case 'RECOMPENSE_INTROUVABLE':
-          afficherToast("⚠️ Récompense introuvable.");
-          break;
-        case 'RECOMPENSE_DEJA_UTILISEE':
-          afficherToast("⚠️ Cette récompense a déjà été utilisée !");
-          break;
-        case 'RECOMPENSE_APPARTIENT_AUTRE_ENFANT':
-          afficherToast("⚠️ Cette récompense appartient à un autre enfant.");
-          break;
-        case 'ENFANT_INTROUVABLE':
-          afficherToast("⚠️ Profil enfant introuvable.");
-          break;
-        default:
-          afficherToast("⚠️ Erreur serveur lors de l'opération.");
+        case 'XP_INSUFFISANTS': afficherToast("⚠️ Tu n'as pas assez d'XP disponibles !"); break;
+        case 'RECOMPENSE_INTROUVABLE': afficherToast("⚠️ Récompense introuvable."); break;
+        case 'RECOMPENSE_DEJA_UTILISEE': afficherToast("⚠️ Cette récompense a déjà été utilisée !"); break;
+        case 'RECOMPENSE_APPARTIENT_AUTRE_ENFANT': afficherToast("⚠️ Cette récompense appartient à un autre enfant."); break;
+        case 'ENFANT_INTROUVABLE': afficherToast("⚠️ Profil enfant introuvable."); break;
+        default: afficherToast("⚠️ Erreur serveur lors de l'opération.");
       }
     }
 
@@ -1046,6 +1138,8 @@
           dateD.setHours(0, 0, 0, 0);
           return !estFaitOuAnnule(d) && dateD.getTime() <= aujourdhui.getTime();
         });
+      } else if (jourFiltreKey) {
+        devoirsFiltres = devoirsFiltres.filter(d => d.Date_Echeance && d.Date_Echeance.split('T')[0] === jourFiltreKey);
       }
 
       devoirsFiltres.sort((a, b) => {
@@ -1069,10 +1163,11 @@
 
       devoirsFiltres.forEach(d => {
         let dateObj = d.Date_Echeance ? new Date(d.Date_Echeance) : null;
+        let dateKeyGroup = d.Date_Echeance ? d.Date_Echeance.split('T')[0] : 'sans-date';
         let dateStr = dateObj ? dateObj.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }) : 'Sans date';
         
         if (dateStr !== currentGroup) {
-          html += `<div class="jour-header"><div class="jour-title">${dateStr.charAt(0).toUpperCase() + dateStr.slice(1)}</div></div>`;
+          html += `<div id="group-${dateKeyGroup}" class="jour-header"><div class="jour-title">${dateStr.charAt(0).toUpperCase() + dateStr.slice(1)}</div></div>`;
           currentGroup = dateStr;
         }
 
@@ -1087,7 +1182,7 @@
         const dateKey = d.Date_Echeance ? d.Date_Echeance.split('T')[0] : '';
         const estEnRetard = !estFait && dateKey && dateKey < aujourdhuiKey;
 
-        if (vueActuelle === 'tous' && !idCibleAAncre && !estFait && dateObj) {
+        if (vueActuelle === 'tous' && !idCibleAAncre && !estFait && dateObj && !jourFiltreKey) {
           let dateD = new Date(dateObj);
           dateD.setHours(0, 0, 0, 0);
           if (dateD.getTime() >= aujourdhui.getTime()) {
@@ -1134,7 +1229,7 @@
 
       container.innerHTML += html;
 
-      if (vueActuelle === 'tous') {
+      if (vueActuelle === 'tous' && !jourFiltreKey) {
         setTimeout(() => {
           if (idCibleAAncre) {
             const el = document.getElementById(idCibleAAncre);
@@ -1164,7 +1259,7 @@
 
       const pourcentage = totalMin > 0 ? Math.round((faitsMin / totalMin) * 100) : 0;
 
-      let labelVue = vueActuelle === 'aujourdhui' ? "Aujourd'hui" : "À venir";
+      let labelVue = vueActuelle === 'aujourdhui' ? "Aujourd'hui" : (jourFiltreKey ? "Jour sélectionné" : "À venir");
 
       container.innerHTML = `
         <div class="charge-card">
