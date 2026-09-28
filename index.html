@@ -582,8 +582,13 @@
 
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbwSBdQHLeLF_sGy0dVq3gtFPHIm2saKyYb2DMTidzVCXPXIdVoI1LY87mC0U8M6HhKb/exec";
-    const REFERENTIELS_URL = "public/data/referentiels.json";
-
+  // Chemins possibles selon le mode d'hébergement
+    const REFERENTIELS_PATHS = [
+      "data/referentiels.json",
+      "./data/referentiels.json",
+      "public/data/referentiels.json"
+    ];
+  
     let devoirs = [];
     let enfants = [];
     let matieres = [];
@@ -614,12 +619,37 @@
       });
     }
 
-    async function chargerReferentielsLocaux() {
-      try {
-        const res = await fetch(REFERENTIELS_URL);
-        if (!res.ok) throw new Error("Impossible de charger " + REFERENTIELS_URL);
-        const data = await res.json();
+// Chemins possibles selon le mode d'hébergement
+    const REFERENTIELS_PATHS = [
+      "data/referentiels.json",
+      "./data/referentiels.json",
+      "public/data/referentiels.json"
+    ];
 
+    async function chargerReferentielsLocaux() {
+      let data = null;
+      let loadedPath = "";
+
+      for (const path of REFERENTIELS_PATHS) {
+        try {
+          const res = await fetch(path);
+          if (res.ok) {
+            data = await res.json();
+            loadedPath = path;
+            break;
+          }
+        } catch (e) {
+          // Continue vers le chemin suivant
+        }
+      }
+
+      if (!data) {
+        console.error("Erreur : Impossible de charger referentiels.json depuis aucun des chemins connus.");
+        afficherToast("⚠️ Référentiels locaux non trouvés (404)");
+        return;
+      }
+
+      try {
         enfants = data.enfants || [];
         matieres = data.matieres || [];
         statuts = data.statuts || [];
@@ -630,9 +660,10 @@
 
         genererFiltreEnfants();
         remplirListesDeroulantes();
+        console.log("Référentiels chargés avec succès depuis : " + loadedPath);
       } catch (err) {
-        console.error("Erreur lors du chargement des référentiels locaux :", err);
-        afficherToast("⚠️ Référentiels locaux non chargés");
+        console.error("Erreur lors de l'assignation des référentiels locaux :", err);
+        afficherToast("⚠️ Erreur de traitement des référentiels");
       }
     }
 
