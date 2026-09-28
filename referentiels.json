@@ -1,6 +1,6 @@
 {
   "enfants": [
-    { "ID_Enfant": "ENF01", "Prenom": "Matys", "Niveau": "Troisième", "Actif": true },
+    { "ID_Enfant": "ENF01", "Prenom": "Enola", "Niveau": "Troisième", "Actif": true },
     { "ID_Enfant": "ENF02", "Prenom": "Andreas", "Niveau": "Cinquième", "Actif": true }
   ],
   "matieres": [
